@@ -18,6 +18,9 @@ app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/users', require('./src/routes/users'));
 app.use('/api/missions', require('./src/routes/missions'));
 app.use('/api/achievements', require('./src/routes/achievements'));
+// Agregar después de las otras rutas
+app.use('/api/questionnaire', require('./src/routes/questionnaire'));
+app.use('/api/stats', require('./src/routes/stats'));
 
 // Ruta de prueba
 app.get('/', (req, res) => {

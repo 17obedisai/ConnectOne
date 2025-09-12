@@ -1,7 +1,7 @@
 // Configuración de imágenes para cada nivel
-export const levelImages = {
+const levelImages = {
   1: '/images/panda-level-1.png',
-  2: '/images/panda-level-2.png', 
+  2: '/images/panda-level-2.png',
   3: '/images/panda-level-3.png',
   4: '/images/panda-level-4.png',
   5: '/images/panda-level-5.png',
@@ -17,10 +17,11 @@ export const levelImages = {
   15: '/images/panda-level-15.png',
   16: '/images/panda-level-16.png',
 };
-export const getLevelImage = (level) => {
+
+// Función para obtener la imagen del nivel
+const getLevelImage = (level) => {
   return levelImages[level] || '/images/panda-logo.png';
 };
-// Si no tienes todas las imágenes, usa la imagen por defecto
-export const getLevelImage = (level) => {
-  return levelImages[level] || '/images/panda-logo.png';
-};
+
+// EXPORTACIÓN ÚNICA
+export { levelImages, getLevelImage };
