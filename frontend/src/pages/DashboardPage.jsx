@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom'; // AGREGADO: faltaba este import
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import ProgressWidget from '@/components/dashboard/ProgressWidget';
 import Confetti from 'react-confetti';
 
 const DashboardPage = () => {
+  const navigate = useNavigate(); // AGREGADO
   const { profile, stats, loading, customization, refreshData } = useData();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -30,7 +32,6 @@ const DashboardPage = () => {
   const [weeklyProgress, setWeeklyProgress] = useState(0);
   const prevLevelRef = useRef(stats?.level);
 
-  // Estado para estadísticas en tiempo real
   const [todayStats, setTodayStats] = useState({
     missionsCompleted: 0,
     minutesActive: 0,
@@ -53,16 +54,14 @@ const DashboardPage = () => {
     prevLevelRef.current = stats?.level;
   }, [stats, toast]);
 
-  // Calcular progreso semanal
   useEffect(() => {
-    // Simulación - conectar con backend real
     const progress = Math.min((todayStats.missionsCompleted / 5) * 100, 100);
     setWeeklyProgress(progress);
   }, [todayStats]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    const name = profile?.full_name?.split(' ')[0] || 'Explorador';
+    const name = profile?.full_name?.split(' ')[0] || user?.nombre || 'Explorador';
     
     if (hour < 5) return `¡Descansa bien, ${name}!`;
     if (hour < 12) return `¡Buenos días, ${name}!`;
@@ -93,7 +92,6 @@ const DashboardPage = () => {
     );
   }
 
-  // Quick Stats Cards
   const QuickStatCard = ({ icon: Icon, label, value, trend, color }) => (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer">
       <CardContent className="p-4">
@@ -116,6 +114,15 @@ const DashboardPage = () => {
     </Card>
   );
 
+  // Valores seguros para evitar errores
+  const safeStats = stats || {
+    level: 1,
+    xp: 0,
+    xp_to_next_level: 1000,
+    streak: 0,
+    achievements_unlocked: 0
+  };
+
   return (
     <>
       <Helmet>
@@ -125,8 +132,7 @@ const DashboardPage = () => {
       
       {celebrating && <Confetti recycle={false} numberOfPieces={200} />}
 
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header mejorado */}
+      <div className="max-w-7xl mx-auto space-y-6 p-4">
         <div className="bg-gradient-to-r from-purple-600/10 to-blue-600/10 rounded-2xl p-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -137,7 +143,7 @@ const DashboardPage = () => {
                 <EnergikoPanda 
                   pandaType="dashboard" 
                   size="large" 
-                  equippedItems={customization?.items} 
+                  equippedItems={customization?.items || []} 
                 />
               </motion.div>
               <div>
@@ -148,21 +154,20 @@ const DashboardPage = () => {
                 <div className="flex items-center gap-4 mt-2">
                   <span className="flex items-center gap-1 text-sm">
                     <Flame className="w-4 h-4 text-orange-500" />
-                    Racha: {stats?.streak || 0} días
+                    Racha: {safeStats.streak} días
                   </span>
                   <span className="flex items-center gap-1 text-sm">
                     <Star className="w-4 h-4 text-yellow-500" />
-                    Nivel {stats?.level || 1}
+                    Nivel {safeStats.level}
                   </span>
                   <span className="flex items-center gap-1 text-sm">
                     <Trophy className="w-4 h-4 text-purple-500" />
-                    {stats?.achievements_unlocked || 0} logros
+                    {safeStats.achievements_unlocked} logros
                   </span>
                 </div>
               </div>
             </div>
             
-            {/* Acciones rápidas */}
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
                 <Award className="w-4 h-4 mr-2" />
@@ -175,7 +180,6 @@ const DashboardPage = () => {
             </div>
           </div>
           
-          {/* Barra de progreso del día */}
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-2">
               <span>Progreso del día</span>
@@ -185,7 +189,6 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Quick Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickStatCard 
             icon={CheckCircle2} 
@@ -215,7 +218,6 @@ const DashboardPage = () => {
           />
         </div>
 
-        {/* Contenido principal con tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="today">Hoy</TabsTrigger>
@@ -234,7 +236,6 @@ const DashboardPage = () => {
                   }));
                 }} />
                 
-                {/* Actividad reciente */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Actividad Reciente</CardTitle>
@@ -257,9 +258,8 @@ const DashboardPage = () => {
               </div>
               
               <div className="space-y-6">
-                <ProgressWidget stats={stats} />
+                <ProgressWidget stats={safeStats} />
                 
-                {/* Sugerencias personalizadas */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -303,7 +303,7 @@ const DashboardPage = () => {
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-6">
-            <ProgressWidget stats={stats} detailed={true} />
+            <ProgressWidget stats={safeStats} detailed={true} />
           </TabsContent>
         </Tabs>
       </div>
