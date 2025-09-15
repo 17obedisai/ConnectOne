@@ -58,6 +58,7 @@ function App() {
                   <Route path="/levels" element={<LevelsPage />} />
                   <Route path="/achievements" element={<AchievementsPage />} />
                   <Route path="/challenges" element={<ChallengesPage />} />
+                  <Route path="/missions" element={<MissionsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/mission/:id" element={<MissionPage />} />

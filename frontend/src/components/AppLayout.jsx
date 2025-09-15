@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
-import { LayoutDashboard, User, Award, Star, GitBranch, Settings, LogOut, Trophy, Menu } from 'lucide-react';
+import { LayoutDashboard, User, Award, Star, GitBranch, Settings, LogOut, Trophy, Menu, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import EnergikoPanda from '@/components/EnergikoPanda';
@@ -34,14 +34,15 @@ const SidebarContent = ({ onLinkClick }) => {
     navigate('/');
   };
 
-  const navItems = [
-    { to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, text: 'Panel' },
-    { to: '/progress', icon: <GitBranch className="w-5 h-5" />, text: 'Mapa de Progreso' },
-    { to: '/levels', icon: <Star className="w-5 h-5" />, text: 'Niveles' },
-    { to: '/achievements', icon: <Award className="w-5 h-5" />, text: 'Logros' },
-    { to: '/challenges', icon: <Trophy className="w-5 h-5" />, text: 'Retos Semanales' },
-    { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Mi Perfil' },
-  ];
+const navItems = [
+  { to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, text: 'Panel' },
+  { to: '/missions', icon: <Target className="w-5 h-5" />, text: 'Misiones' }, // AÑADIR ESTA LÍNEA
+  { to: '/progress', icon: <GitBranch className="w-5 h-5" />, text: 'Mapa de Progreso' },
+  { to: '/levels', icon: <Star className="w-5 h-5" />, text: 'Niveles' },
+  { to: '/achievements', icon: <Award className="w-5 h-5" />, text: 'Logros' },
+  { to: '/challenges', icon: <Trophy className="w-5 h-5" />, text: 'Retos Semanales' },
+  { to: '/profile', icon: <User className="w-5 h-5" />, text: 'Mi Perfil' },
+];
   
   const PandoCoins = stats ? (stats.level * 100) + (stats.streak * 20) + (stats.achievements_unlocked * 50) : 0;
 
