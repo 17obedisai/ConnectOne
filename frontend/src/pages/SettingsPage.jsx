@@ -13,16 +13,43 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import EnergikoPanda from '@/components/EnergikoPanda';
-import { 
-  ArrowLeft, User, Bell, Shield, Save, RefreshCw, 
-  Moon, Sun, Volume2, Globe, Clock, Calendar, 
-  Smartphone, Mail, Lock, Trash2, Download, Upload,
-  AlertCircle, CheckCircle, Camera, Edit, LogOut,
-  Heart, Brain, Activity, Target
-} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import axios from 'axios';
+
+// Imports de lucide-react (SIN DUPLICADOS)
+import { 
+  ArrowLeft, 
+  User, 
+  Bell, 
+  Shield, 
+  Save, 
+  RefreshCw,
+  Moon, 
+  Sun, 
+  Volume2, 
+  Globe, 
+  Clock, 
+  Calendar,
+  Smartphone, 
+  Mail, 
+  Lock, 
+  Trash2, 
+  Download, 
+  Upload,
+  AlertCircle, 
+  CheckCircle, 
+  Camera, 
+  Edit, 
+  LogOut,
+  Heart, 
+  Brain, 
+  Activity, 
+  Target,
+  BookOpen, 
+  Users, 
+  Sparkles
+} from 'lucide-react';
 
 const SettingsPage = () => {
   const { user, logout } = useAuth();

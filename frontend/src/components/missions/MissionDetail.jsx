@@ -12,9 +12,36 @@
     } from 'lucide-react';
 
     const MissionDetail = ({ mission, onStart, onComplete }) => {
-    const [activeTab, setActiveTab] = useState('overview');
-    const [currentStep, setCurrentStep] = useState(0);
-    const [isActive, setIsActive] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+
+  // Validación de misión
+  if (!mission || !mission.contenido) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardContent className="p-8 text-center">
+          <p className="text-muted-foreground">Cargando detalles de la misión...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Asegurar que contenido tenga valores por defecto
+  const contenido = {
+    introduccion: mission.contenido?.introduccion || 'Información no disponible',
+    ciencia: mission.contenido?.ciencia || 'Información no disponible',
+    instrucciones: mission.contenido?.instrucciones || [],
+    beneficios: mission.contenido?.beneficios || [],
+    tips: mission.contenido?.tips || [],
+    equipamientoNecesario: mission.contenido?.equipamientoNecesario || [],
+    ejercicios: mission.contenido?.ejercicios || [],
+    variaciones: mission.contenido?.variaciones || {},
+    precauciones: mission.contenido?.precauciones || [],
+    preguntasReflexion: mission.contenido?.preguntasReflexion || []
+  };
+
+  // Resto del componente...
 
     const categoryIcons = {
         ejercicio: <Dumbbell className="w-5 h-5" />,

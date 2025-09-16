@@ -1,220 +1,250 @@
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import { toPng } from 'html-to-image';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Star, Flame, Trophy, Edit3, Camera, Crown, 
+  Sparkles, CheckCircle, Lock
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { getAnchors, accessoriesInventory } from '@/config/accessories.js';
-
-import InventoryPanel from '@/components/profile/InventoryPanel';
-import PandaCanvas from '@/components/profile/PandaCanvas';
-import ActionsPanel from '@/components/profile/ActionsPanel';
-import ProfileInfo from '@/components/profile/ProfileInfo';
+import EnergikoPanda from '@/components/EnergikoPanda';
+import { unlockableItems } from '@/data/unlockableItems';
 
 const ProfilePage = () => {
   const { user } = useAuth();
-  const { profile, stats, loading, refreshData } = useData();
+  const { stats, updateCustomization } = useData();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [equippedItems, setEquippedItems] = useState({});
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bio, setBio] = useState('Viva España 🏁');
 
-  const [equippedItems, setEquippedItems] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const pandaContainerRef = useRef(null);
+  const level = stats?.level || 1;
+  const xp = stats?.xp || 80;
+  const xpToNext = stats?.xp_to_next_level || 1000;
+  const xpPercentage = (xp / xpToNext) * 100;
 
-  useEffect(() => {
-    if (user) {
-      const savedCustomization = JSON.parse(localStorage.getItem(`customization_${user.id}`));
-      if (savedCustomization && savedCustomization.items) {
-        setEquippedItems(savedCustomization.items);
+  const getUnlockedItems = () => {
+    const items = [];
+    for (let lvl = 1; lvl <= level; lvl++) {
+      if (unlockableItems[lvl]) {
+        items.push(...unlockableItems[lvl].items.map(item => ({
+          ...item,
+          unlockedAt: lvl
+        })));
       }
     }
-  }, [user]);
-
-  const updateEquippedItem = (instanceId, updates) => {
-    setEquippedItems(prev => prev.map(item => item.instanceId === instanceId ? { ...item, ...updates } : item));
-    if (selectedItem?.instanceId === instanceId) {
-        setSelectedItem(prev => ({...prev, ...updates}));
-    }
+    return items;
   };
 
-  const handleDrop = useCallback((item, monitor) => {
-    if (!item.isUnlocked) {
-        toast({ title: "Bloqueado", description: `Necesitas alcanzar el nivel ${item.unlock_level} para usar esto.`, variant: "destructive" });
-        return;
-    }
-    
-    const anchor = getAnchors(item.category, item.hand);
-    const newItem = {
-        ...item,
-        x: anchor.x,
-        y: anchor.y,
-        scale: anchor.scale,
-        rotation: 0,
-        zIndex: anchor.zIndex,
-        visible: true,
-        instanceId: `${item.id}_${Date.now()}`,
-    };
+  const unlockedItems = getUnlockedItems();
 
-    const canHaveMultiple = ['wristbands', 'stickers'].includes(item.category);
+  const itemCategories = [
+    { id: 'all', name: 'Hacer', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'accessories', name: 'Accesorios', icon: <Crown className="w-4 h-4" /> },
+    { id: 'backgrounds', name: 'Fondos', icon: '🏞️' },
+    { id: 'effects', name: 'Efectos', icon: '⚡' },
+    { id: 'titles', name: 'Títulos', icon: '🏅' }
+  ];
+
+  const handleEquipItem = (item) => {
+    const newEquipped = { ...equippedItems };
+    if (newEquipped[item.id]) {
+      delete newEquipped[item.id];
+    } else {
+      newEquipped[item.id] = item;
+    }
+    setEquippedItems(newEquipped);
+    updateCustomization({ items: Object.values(newEquipped) });
     
-    setEquippedItems(prev => {
-        const isEquipped = prev.some(i => i.id === item.id);
-        if (isEquipped && !canHaveMultiple) {
-            toast({ title: "Ya equipado", description: "Solo puedes tener un ítem de esta categoría.", variant: "default" });
-            return prev;
-        }
-        const filteredPrev = canHaveMultiple ? prev : prev.filter(i => i.category !== item.category);
-        return [...filteredPrev, newItem];
+    toast({
+      title: newEquipped[item.id] ? "Equipado" : "Desequipado",
+      description: `${item.name} ${newEquipped[item.id] ? 'equipado' : 'desequipado'}`
     });
-  }, [toast, stats]);
-  
-  const handleSaveCustomization = async () => {
-    if (user) {
-      try {
-        const customizationToSave = { items: equippedItems };
-        localStorage.setItem(`customization_${user.id}`, JSON.stringify(customizationToSave));
-        toast({ title: "¡Personalización guardada!", description: "El nuevo look de Enérgiko está listo." });
-        await refreshData();
-      } catch (e) {
-        toast({ title: "Error", description: "No se pudo guardar la personalización.", variant: "destructive" });
-      }
-    }
   };
-
-  const removeItem = (instanceId) => {
-    setEquippedItems(prev => prev.filter(item => item.instanceId !== instanceId));
-    if (selectedItem?.instanceId === instanceId) setSelectedItem(null);
-  };
-
-  const removeAll = () => {
-    setEquippedItems([]);
-    setSelectedItem(null);
-  };
-  
-  const randomize = () => {
-    if (!stats) return;
-    const randomItems = [];
-    const categories = Object.keys(accessoriesInventory);
-    
-    categories.forEach(category => {
-      if (Math.random() > 0.4) {
-        const unlockedItems = accessoriesInventory[category].filter(i => (stats.level >= i.unlock_level) && i.src && i.src !== '/assets/placeholder.png');
-        if (unlockedItems.length > 0) {
-          const randomItem = unlockedItems[Math.floor(Math.random() * unlockedItems.length)];
-          const anchor = getAnchors(randomItem.category, randomItem.hand);
-          randomItems.push({
-            ...randomItem,
-            x: anchor.x + (Math.random() * 10 - 5),
-            y: anchor.y + (Math.random() * 10 - 5),
-            scale: anchor.scale * (Math.random() * 0.4 + 0.8),
-            rotation: Math.floor(Math.random() * 40) - 20,
-            zIndex: anchor.zIndex,
-            visible: true,
-            instanceId: `${randomItem.id}_${Date.now()}`,
-          });
-        }
-      }
-    });
-    setEquippedItems(randomItems);
-  };
-
-  const exportAsPng = useCallback(() => {
-    if (pandaContainerRef.current === null) {
-      toast({ title: "Error", description: "No se puede exportar la imagen ahora mismo.", variant: "destructive" });
-      return;
-    }
-    toPng(pandaContainerRef.current, { cacheBust: true, backgroundColor: 'transparent', pixelRatio: 2 })
-      .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = 'energiko-personalizado.png';
-        link.href = dataUrl;
-        link.click();
-        toast({ title: "¡Exportado!", description: "Tu Enérgiko personalizado se está descargando." });
-      })
-      .catch((err) => {
-        console.error(err);
-        toast({ title: "Error de exportación", description: "No se pudo generar la imagen.", variant: "destructive" });
-      });
-  }, [pandaContainerRef, toast]);
-
-  if (loading || !profile || !stats || !user) {
-    return <div className="flex items-center justify-center min-h-screen">Cargando perfil...</div>;
-  }
 
   return (
     <>
       <Helmet>
-        <title>Mi Perfil y Personalización - ConnectONE</title>
-        <meta name="description" content="Personaliza a Enérgiko y gestiona la información de tu perfil en ConnectONE." />
+        <title>Mi Perfil - ConnectONE</title>
       </Helmet>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-8">
-        <h1 className="text-4xl font-bold gradient-text">Mi Perfil</h1>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header del perfil */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/50 to-blue-900/50 p-8"
+        >
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              {/* Avatar 3D-like con Panda Rojo */}
+              <motion.div 
+                className="relative group"
+                whileHover={{ rotateY: 10 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="relative w-40 h-40 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 p-1">
+                  <div className="w-full h-full bg-gray-900 rounded-xl flex items-center justify-center">
+                    <EnergikoPanda 
+                      pandaType="profile" 
+                      size="xlarge"
+                      equippedItems={Object.values(equippedItems)}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  size="icon" 
+                  className="absolute -bottom-2 -right-2 rounded-full"
+                  variant="secondary"
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
+              </motion.div>
 
-        {/* Mobile View */}
-        <div className="block md:hidden">
-          <Tabs defaultValue="panda" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="accesorios">Accesorios</TabsTrigger>
-              <TabsTrigger value="panda">Panda</TabsTrigger>
-              <TabsTrigger value="acciones">Acciones</TabsTrigger>
-            </TabsList>
-            <TabsContent value="accesorios" className="p-4 bg-card rounded-b-2xl"><InventoryPanel level={stats.level} /></TabsContent>
-            <TabsContent value="panda" className="p-4 bg-card rounded-b-2xl">
-                <PandaCanvas 
-                    equippedItems={equippedItems} 
-                    onDrop={handleDrop} 
-                    onUpdateItem={updateEquippedItem} 
-                    selectedItem={selectedItem}
-                    setSelectedItem={setSelectedItem}
-                    pandaContainerRef={pandaContainerRef}
-                />
-            </TabsContent>
-            <TabsContent value="acciones" className="p-4 bg-card rounded-b-2xl">
-                <ActionsPanel 
-                    onSave={handleSaveCustomization}
-                    onRemoveAll={removeAll}
-                    onRandomize={randomize}
-                    onExport={exportAsPng}
-                    selectedItem={selectedItem}
-                    onUpdateItem={updateEquippedItem}
-                    onRemoveItem={removeItem}
-                />
-            </TabsContent>
-          </Tabs>
-        </div>
+              {/* Información principal */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-3xl font-bold mb-2">obedecio</h1>
+                <p className="text-gray-400 mb-2">{user?.email || 'obedisai1717@gmail.com'}</p>
+                
+                {/* Bio editable */}
+                <div className="mb-4 flex items-center gap-2">
+                  {isEditingBio ? (
+                    <>
+                      <input
+                        type="text"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        className="px-3 py-1 rounded bg-gray-800 border border-gray-700"
+                      />
+                      <Button size="sm" onClick={() => setIsEditingBio(false)}>
+                        Guardar
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="italic">{bio}</p>
+                      <Button size="icon" variant="ghost" onClick={() => setIsEditingBio(true)}>
+                        <Edit3 className="w-3 h-3" />
+                      </Button>
+                    </>
+                  )}
+                </div>
 
-        {/* Desktop View */}
-        <div className="hidden md:grid md:grid-cols-12 gap-6">
-          <div className="md:col-span-3"><Card className="p-4 h-full"><InventoryPanel level={stats.level} /></Card></div>
-          <div className="md:col-span-6">
-            <PandaCanvas 
-                equippedItems={equippedItems} 
-                onDrop={handleDrop} 
-                onUpdateItem={updateEquippedItem} 
-                selectedItem={selectedItem}
-                setSelectedItem={setSelectedItem}
-                pandaContainerRef={pandaContainerRef}
-            />
+                {/* Stats principales */}
+                <div className="flex gap-6">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-500" />
+                    <span className="text-xl font-bold">{level}</span>
+                    <span className="text-sm text-gray-400">Nivel</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-5 h-5 text-orange-500" />
+                    <span className="text-xl font-bold">{stats?.streak || 1}</span>
+                    <span className="text-sm text-gray-400">Racha</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-purple-500" />
+                    <span className="text-xl font-bold">{stats?.achievements_unlocked || 0}</span>
+                    <span className="text-sm text-gray-400">Logros</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progreso */}
+              <Card className="w-full md:w-64 bg-gray-800/50 border-gray-700">
+                <CardContent className="p-4">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Nivel {level}</span>
+                    <span>Nivel {level + 1}</span>
+                  </div>
+                  <Progress value={xpPercentage} className="h-2 mb-2" />
+                  <p className="text-center text-sm">
+                    {xp} / {xpToNext} XP
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-          <div className="md:col-span-3"><Card className="p-4 h-full">
-            <ActionsPanel 
-                onSave={handleSaveCustomization}
-                onRemoveAll={removeAll}
-                onRandomize={randomize}
-                onExport={exportAsPng}
-                selectedItem={selectedItem}
-                onUpdateItem={updateEquippedItem}
-                onRemoveItem={removeItem}
-            />
-            </Card></div>
-        </div>
-        
-        <ProfileInfo profile={profile} stats={stats} refreshData={refreshData} />
-      </motion.div>
+        </motion.div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="overview">General</TabsTrigger>
+            <TabsTrigger value="inventory">Inventario</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardContent className="p-6 text-center">
+                <p className="text-gray-400">
+                  Sigue completando misiones para subir de nivel y desbloquear más contenido
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="inventory" className="space-y-4">
+            {/* Filtros */}
+            <div className="flex gap-2 overflow-x-auto">
+              {itemCategories.map(cat => (
+                <Button
+                  key={cat.id}
+                  variant={selectedCategory === cat.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat.id)}
+                >
+                  {typeof cat.icon === 'string' ? cat.icon : cat.icon}
+                  <span className="ml-2">{cat.name}</span>
+                </Button>
+              ))}
+            </div>
+
+            {/* Items */}
+            {unlockedItems.length > 0 ? (
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                {unlockedItems.map(item => (
+                  <Card 
+                    key={item.id}
+                    className={`cursor-pointer bg-gray-800/50 border-gray-700 ${
+                      equippedItems[item.id] ? 'ring-2 ring-purple-500' : ''
+                    }`}
+                    onClick={() => handleEquipItem(item)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="aspect-square rounded bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex items-center justify-center mb-2">
+                        <span className="text-2xl">🎁</span>
+                      </div>
+                      <p className="text-xs text-center">{item.name}</p>
+                      <p className="text-xs text-center text-gray-500">Nivel {item.unlockedAt}</p>
+                      {equippedItems[item.id] && (
+                        <CheckCircle className="w-4 h-4 mx-auto mt-1 text-green-500" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-8 text-center">
+                  <Lock className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+                  <p className="text-gray-400">
+                    Sube de nivel para desbloquear items
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </>
   );
 };
