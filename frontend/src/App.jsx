@@ -24,7 +24,6 @@ import MissionPage from '@/pages/MissionPage';
 import AchievementsPage from '@/pages/AchievementsPage';
 import ProgressMapPage from '@/pages/ProgressMapPage';
 import LevelsPage from '@/pages/LevelsPage';
-import ChallengesPage from '@/pages/ChallengesPage';
 
 // Componente PrivateRoute DEBE estar DENTRO del AuthProvider para poder usar useAuth
 const PrivateRoute = ({ children }) => {
@@ -51,7 +50,6 @@ const AppRoutes = () => {
         <Route path="/progress" element={<ProgressMapPage />} />
         <Route path="/levels" element={<LevelsPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
-        <Route path="/challenges" element={<ChallengesPage />} />
         <Route path="/missions" element={<MissionsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
