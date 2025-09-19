@@ -48,21 +48,20 @@ const ProfilePage = () => {
   const level = stats?.level || 1;
   
   // Sistema de pandas con solo los primeros 4 disponibles inicialmente
-  const pandaVersions = [
+const pandaVersions = [
     { level: 1, name: 'Iniciado Curioso', image: '/images/panda-profile.png', description: 'Comenzando el viaje', unlocked: true },
-    { level: 2, name: 'Explorador Novato', image: '/frontend/public/images/panda-level-2.png', description: 'Primeros pasos', unlocked: true },
-    { level: 3, name: 'Aprendiz Dedicado', image: '/frontend/public/images/panda-level-3.png', description: 'Construyendo hábitos', unlocked: true },
-    { level: 4, name: 'Practicante Constante', image: '/frontend/public/images/panda-level-4.png', description: 'Disciplina en formación', unlocked: true },
-    { level: 5, name: 'Guerrero del Hábito', image: '/frontend/public/images/panda-level-5.png', description: 'Superando obstáculos', unlocked: level >= 5 },
-    { level: 6, name: 'Arquitecto del Cambio', image: '//frontend/public/images/panda-level-6.png', description: 'Diseñando tu futuro', unlocked: level >= 6 },
-    { level: 7, name: 'Guardián del Bienestar', image: '/frontend/public/images/panda-level-2.png', description: 'Protegiendo progreso', unlocked: level >= 7 },
-    { level: 8, name: 'Maestro en Formación', image: '/frontend/public/images/panda-level-2.png', description: 'Dominando las bases', unlocked: level >= 8 },
-    { level: 10, name: 'Mentor Inspirador', image: '/frontend/public/images/panda-level-2.png', description: 'Guiando con ejemplo', unlocked: level >= 10 },
-    { level: 12, name: 'Campeón Constante', image: '/frontend/public/images/panda-level-2.png', description: 'Perseverancia pura', unlocked: level >= 12 },
-    { level: 14, name: 'Leyenda en Ascenso', image: '/frontend/public/images/panda-level-2.png', description: 'Cerca de la cima', unlocked: level >= 14 },
-    { level: 16, name: 'Energiko Supremo', image: '/frontend/public/images/panda-level-16.png', description: 'Maestría total', unlocked: level >= 16 }
+    { level: 2, name: 'Explorador Novato', image: '/images/panda-level-2.png', description: 'Primeros pasos', unlocked: true },
+    { level: 3, name: 'Aprendiz Dedicado', image: '/images/panda-level-3.png', description: 'Construyendo hábitos', unlocked: true },
+    { level: 4, name: 'Practicante Constante', image: '/images/panda-level-4.png', description: 'Disciplina en formación', unlocked: true },
+    { level: 5, name: 'Guerrero del Hábito', image: '/images/panda-level-5.png', description: 'Superando obstáculos', unlocked: level >= 5 },
+    { level: 6, name: 'Arquitecto del Cambio', image: '/images/panda-level-6.png', description: 'Diseñando tu futuro', unlocked: level >= 6 },
+    { level: 7, name: 'Guardián del Bienestar', image: '/images/panda-level-7.png', description: 'Protegiendo progreso', unlocked: level >= 7 },
+    { level: 8, name: 'Maestro en Formación', image: '/images/panda-level-13.png', description: 'Dominando las bases', unlocked: level >= 8 },
+    { level: 10, name: 'Mentor Inspirador', image: '/images/panda-level-8.png', description: 'Guiando con ejemplo', unlocked: level >= 10 },
+    { level: 12, name: 'Campeón Constante', image: '/images/panda-level-15.png', description: 'Perseverancia pura', unlocked: level >= 12 },
+    { level: 14, name: 'Leyenda en Ascenso', image: '/images/panda-level-11.png', description: 'Cerca de la cima', unlocked: level >= 14 },
+    { level: 16, name: 'Energiko Supremo', image: '/images/panda-level-16.png', description: 'Maestría total alcanzada', unlocked: level >= 16 }
   ];
-
   // Opciones conectadas al cuestionario
   const interesesOpciones = [
     { value: 'meditacion', label: 'Meditación', icon: '🧘' },
