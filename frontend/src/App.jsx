@@ -47,7 +47,7 @@ const AppRoutes = () => {
       <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
         <Route path="/onboarding" element={<QuestionnairePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/progress" element={<ProgressMapPage />} />
+        <Route path="map" element={<ProgressMapPage />} />
         <Route path="/levels" element={<LevelsPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/missions" element={<MissionsPage />} />

@@ -1,505 +1,333 @@
-    import React, { useState, useEffect } from 'react';
-    import { motion, AnimatePresence } from 'framer-motion';
-    import { Helmet } from 'react-helmet';
-    import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-    import { Button } from '@/components/ui/button';
-    import { Badge } from '@/components/ui/badge';
-    import { Progress } from '@/components/ui/progress';
-    import { 
-    Star, Lock, CheckCircle, Trophy, Target, Flame,
-    Award, Sparkles, ChevronRight, Zap, Gift, MapPin
-    } from 'lucide-react';
-    import { useData } from '@/contexts/DataContext';
-    import confetti from 'canvas-confetti';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { 
+  MapPin, Lock, CheckCircle, Star, Trophy, Sparkles, 
+  ChevronLeft, ChevronRight, Zap, Heart, Brain
+} from 'lucide-react';
+import { useData } from '@/contexts/DataContext';
+import { useNavigate } from 'react-router-dom';
 
-    const ProgressMapPage = () => {
-    const { stats } = useData();
-    const [selectedCheckpoint, setSelectedCheckpoint] = useState(null);
-    const [hoveredCheckpoint, setHoveredCheckpoint] = useState(null);
-    const [isMobile, setIsMobile] = useState(false);
+const ProgressMapPage = () => {
+  const navigate = useNavigate();
+  const { stats } = useData();
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [mapScale, setMapScale] = useState(1);
+  const mapRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      // Ajustar escala según tamaño de pantalla
+      if (window.innerWidth < 640) {
+        setMapScale(0.6);
+      } else if (window.innerWidth < 1024) {
+        setMapScale(0.8);
+      } else {
+        setMapScale(1);
+      }
+    };
     
-    const currentLevel = stats?.level || 1;
-    const currentXP = stats?.xp || 80;
-    const xpToNext = stats?.xp_to_next_level || 1000;
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-    useEffect(() => {
-        const checkMobile = () => {
-        setIsMobile(window.innerWidth < 768);
-        };
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+  const currentLevel = stats?.level || 1;
+  
+  const levels = [
+    { id: 1, name: 'El Despertar', x: 50, y: 85, unlocked: true },
+    { id: 2, name: 'Primeros Pasos', x: 30, y: 75, unlocked: currentLevel >= 1 },
+    { id: 3, name: 'Valle Constancia', x: 60, y: 65, unlocked: currentLevel >= 2 },
+    { id: 4, name: 'Río Meditación', x: 40, y: 55, unlocked: currentLevel >= 3 },
+    { id: 5, name: 'Bosque Conocimiento', x: 70, y: 45, unlocked: currentLevel >= 4 },
+    { id: 6, name: 'Montaña Desafío', x: 35, y: 35, unlocked: currentLevel >= 5 },
+    { id: 7, name: 'Jardín Gratitud', x: 65, y: 30, unlocked: currentLevel >= 6 },
+    { id: 8, name: 'Templo Equilibrio', x: 45, y: 20, unlocked: currentLevel >= 7 },
+    { id: 9, name: 'Ciudad Mentor', x: 25, y: 15, unlocked: currentLevel >= 8 },
+    { id: 10, name: 'Reino Leyenda', x: 55, y: 10, unlocked: currentLevel >= 9 }
+  ];
 
-    // Checkpoints con posiciones para curvas (responsive)
-    const checkpoints = [
-        { 
-        id: 1, level: 1, name: 'El Despertar', emoji: '🌅', 
-        color: 'from-emerald-400 to-teal-600',
-        description: 'Tu viaje comienza aquí', 
-        rewards: ['Avatar básico', 'Primera misión'],
-        // Desktop positions
-        x: 15, y: 85,
-        // Mobile positions
-        mx: 20, my: 90
-        },
-        { 
-        id: 2, level: 2, name: 'Primeros Pasos', emoji: '👣', 
-        color: 'from-blue-400 to-indigo-600',
-        description: 'Estableciendo hábitos', 
-        rewards: ['Badge de Constancia', '+100 XP'],
-        x: 35, y: 75,
-        mx: 80, my: 85
-        },
-        { 
-        id: 3, level: 4, name: 'Valle Constancia', emoji: '🏞️', 
-        color: 'from-purple-400 to-violet-600',
-        description: 'La disciplina se forma',
-        rewards: ['Modo Focus', 'Personalización'],
-        x: 50, y: 80,
-        mx: 20, my: 75
-        },
-        { 
-        id: 4, level: 5, name: 'Río Meditación', emoji: '💧', 
-        color: 'from-cyan-400 to-blue-600',
-        description: 'Encuentra tu paz', 
-        milestone: true,
-        rewards: ['Corona bronce', 'Título', '+500 XP'],
-        x: 65, y: 65,
-        mx: 80, my: 65
-        },
-        { 
-        id: 5, level: 7, name: 'Bosque Conocimiento', emoji: '🌳', 
-        color: 'from-green-400 to-emerald-600',
-        description: 'Aprende y crece',
-        rewards: ['Biblioteca', 'Mentor AI'],
-        x: 45, y: 50,
-        mx: 20, my: 55
-        },
-        { 
-        id: 6, level: 9, name: 'Montaña Desafío', emoji: '🏔️', 
-        color: 'from-orange-400 to-red-600',
-        description: 'Supera límites',
-        rewards: ['Rutinas avanzadas', 'Modo extremo'],
-        x: 30, y: 40,
-        mx: 80, my: 45
-        },
-        { 
-        id: 7, level: 10, name: 'Templo Equilibrio', emoji: '⛩️', 
-        color: 'from-red-400 to-pink-600',
-        description: 'Maestría bienestar', 
-        milestone: true,
-        rewards: ['Corona plata', 'Aura', '+1000 XP'],
-        x: 50, y: 30,
-        mx: 20, my: 35
-        },
-        { 
-        id: 8, level: 12, name: 'Jardín Gratitud', emoji: '🌸', 
-        color: 'from-pink-400 to-rose-600',
-        description: 'Cultiva felicidad',
-        rewards: ['Jardín zen', 'Mascotas'],
-        x: 70, y: 25,
-        mx: 80, my: 25
-        },
-        { 
-        id: 9, level: 15, name: 'Ciudadela Mentor', emoji: '🏰', 
-        color: 'from-indigo-400 to-purple-600',
-        description: 'Guía a otros', 
-        milestone: true,
-        rewards: ['Corona oro', 'Modo mentor'],
-        x: 85, y: 15,
-        mx: 20, my: 15
-        },
-        { 
-        id: 10, level: 20, name: 'Reino Leyenda', emoji: '👑', 
-        color: 'from-yellow-400 to-amber-600',
-        description: 'Maestría total', 
-        milestone: true,
-        rewards: ['Corona legendaria', 'Status eterno'],
-        x: 50, y: 5,
-        mx: 50, my: 5
-        }
-    ];
+  // Elementos decorativos
+  const decorations = [
+    { type: 'tree', x: 20, y: 80, icon: '🌲' },
+    { type: 'tree', x: 75, y: 70, icon: '🌳' },
+    { type: 'flower', x: 45, y: 60, icon: '🌸' },
+    { type: 'butterfly', x: 35, y: 50, icon: '🦋' },
+    { type: 'bird', x: 80, y: 40, icon: '🦜' },
+    { type: 'waterfall', x: 50, y: 40, icon: '💧' },
+    { type: 'rainbow', x: 60, y: 25, icon: '🌈' },
+    { type: 'star', x: 30, y: 25, icon: '✨' },
+    { type: 'cloud', x: 70, y: 15, icon: '☁️' },
+    { type: 'sun', x: 85, y: 10, icon: '☀️' },
+    { type: 'mountain', x: 15, y: 30, icon: '⛰️' },
+    { type: 'castle', x: 90, y: 20, icon: '🏰' }
+  ];
 
-    const progressPercentage = (currentLevel / 20) * 100;
-    const completedCheckpoints = checkpoints.filter(cp => cp.level <= currentLevel).length;
+  // Animación de partículas
+  const particles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    delay: Math.random() * 5
+  }));
 
-    const handleCheckpointClick = (checkpoint) => {
-        setSelectedCheckpoint(checkpoint);
-        
-        if (checkpoint.level <= currentLevel && checkpoint.milestone) {
-        confetti({
-            particleCount: 200,
-            spread: 100,
-            origin: { y: 0.5 },
-            colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1']
-        });
-        }
-    };
+  return (
+    <>
+      <Helmet>
+        <title>Mapa de Progreso - ConnectONE</title>
+      </Helmet>
 
-    const getCurrentPosition = () => {
-        const index = checkpoints.findIndex(cp => cp.level > currentLevel);
-        if (index === -1) return checkpoints.length - 1;
-        return Math.max(0, index - 1);
-    };
-
-    const currentPosition = getCurrentPosition();
-
-    return (
-        <>
-        <Helmet>
-            <title>Mapa de Progreso - ConnectONE</title>
-        </Helmet>
-
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-            {/* Header */}
-            <motion.div
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+        <div className="max-w-7xl mx-auto">
+          
+          {/* Header */}
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            className="bg-gradient-to-r from-purple-800/50 to-indigo-800/50 backdrop-blur rounded-2xl p-4 md:p-6 border border-purple-500/30 mb-6"
+          >
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                  <MapPin className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
+                  Tu Camino de Transformación
+                </h1>
+                <p className="text-purple-200 text-sm md:text-base mt-1">
+                  Cada paso te acerca más a tu mejor versión
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-white">
+                    {currentLevel}
+                  </p>
+                  <p className="text-xs md:text-sm text-purple-200">Nivel</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-yellow-400">
+                    {levels.filter(l => l.unlocked).length}/{levels.length}
+                  </p>
+                  <p className="text-xs md:text-sm text-purple-200">Logrados</p>
+                </div>
+              </div>
+            </div>
+            
+            <Progress 
+              value={(currentLevel / levels.length) * 100} 
+              className="h-2 mt-4"
+            />
+            <p className="text-center text-purple-300 text-xs md:text-sm mt-2">
+              Progreso Total: {Math.round((currentLevel / levels.length) * 100)}%
+            </p>
+          </motion.div>
+
+          {/* Mapa Principal */}
+          <Card className="bg-gradient-to-br from-purple-900/40 to-indigo-900/40 backdrop-blur border-purple-500/30 overflow-hidden">
+            <div 
+              ref={mapRef}
+              className="relative w-full"
+              style={{ 
+                height: isMobile ? '500px' : '700px',
+                transform: `scale(${mapScale})`,
+                transformOrigin: 'center center'
+              }}
             >
-            <Card className="bg-gradient-to-r from-purple-800/50 to-indigo-800/50 backdrop-blur border-purple-500/30">
-                <CardHeader>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                    <CardTitle className="text-2xl md:text-3xl text-white flex items-center gap-3">
-                        <MapPin className="w-6 md:w-8 h-6 md:h-8 text-purple-400" />
-                        Tu Camino de Transformación
-                    </CardTitle>
-                    <p className="text-purple-200 mt-2 text-sm md:text-base">
-                        Cada paso te acerca más a tu mejor versión
-                    </p>
-                    </div>
-                    
-                    <div className="flex gap-4 md:gap-6">
-                    <div className="text-center">
-                        <motion.div 
-                        className="text-3xl md:text-4xl font-bold text-white"
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        >
-                        {currentLevel}
-                        </motion.div>
-                        <p className="text-xs md:text-sm text-purple-200">Nivel</p>
-                    </div>
-                    
-                    <div className="text-center">
-                        <div className="text-3xl md:text-4xl font-bold text-yellow-400">
-                        {completedCheckpoints}/10
-                        </div>
-                        <p className="text-xs md:text-sm text-purple-200">Logrados</p>
-                    </div>
-                    </div>
-                </div>
-
-                <div className="mt-4 md:mt-6">
-                    <div className="flex justify-between mb-2">
-                    <span className="text-purple-200 text-sm">Progreso Total</span>
-                    <span className="text-white font-bold">{Math.round(progressPercentage)}%</span>
-                    </div>
-                    <Progress value={progressPercentage} className="h-3 md:h-4 bg-purple-950" />
-                </div>
-                </CardHeader>
-            </Card>
-            </motion.div>
-
-            {/* Mapa principal */}
-            <Card className="bg-slate-900/80 backdrop-blur border-purple-500/30 overflow-hidden">
-            <CardContent className="p-0">
-                <div className="relative min-h-[600px] md:min-h-[700px] bg-gradient-to-b from-indigo-950 via-purple-950 to-slate-950 p-4 md:p-8 overflow-x-auto">
+              {/* Fondo con gradiente animado */}
+              <div className="absolute inset-0">
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/50 via-transparent to-indigo-900/50" />
                 
-                {/* SVG Path Curvo Responsive */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <defs>
-                    <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.6" />
-                        <stop offset="50%" stopColor="#8B5CF6" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#FFD700" stopOpacity="1" />
-                    </linearGradient>
-                    </defs>
-                    
-                    {/* Camino curvo serpenteante */}
-                    <path
-                    d={isMobile ? 
-                        // Mobile: zigzag vertical
-                        "M 20 90 Q 50 85, 80 85 T 80 75 Q 50 75, 20 75 T 20 65 Q 50 65, 80 65 T 80 55 Q 50 55, 20 55 T 20 45 Q 50 45, 80 45 T 80 35 Q 50 35, 20 35 T 20 25 Q 50 25, 80 25 T 80 15 Q 50 15, 20 15 T 20 5 Q 35 5, 50 5"
-                        : 
-                        // Desktop: camino curvo más elaborado
-                        "M 15 85 Q 25 80, 35 75 T 50 80 Q 60 75, 65 65 T 45 50 Q 35 45, 30 40 T 50 30 Q 65 28, 70 25 T 85 15 Q 75 10, 50 5"
-                    }
-                    stroke="url(#pathGradient)"
-                    strokeWidth={isMobile ? "1" : "0.5"}
-                    fill="none"
-                    strokeLinecap="round"
-                    opacity="0.3"
-                    />
-                    
-                    {/* Camino completado */}
-                    <path
-                    d={isMobile ? 
-                        "M 20 90 Q 50 85, 80 85 T 80 75 Q 50 75, 20 75 T 20 65 Q 50 65, 80 65 T 80 55 Q 50 55, 20 55 T 20 45 Q 50 45, 80 45 T 80 35 Q 50 35, 20 35 T 20 25 Q 50 25, 80 25 T 80 15 Q 50 15, 20 15 T 20 5 Q 35 5, 50 5"
-                        : 
-                        "M 15 85 Q 25 80, 35 75 T 50 80 Q 60 75, 65 65 T 45 50 Q 35 45, 30 40 T 50 30 Q 65 28, 70 25 T 85 15 Q 75 10, 50 5"
-                    }
-                    stroke="url(#pathGradient)"
-                    strokeWidth={isMobile ? "1.5" : "0.8"}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeDasharray="100"
-                    strokeDashoffset={100 - progressPercentage}
-                    />
-                </svg>
+                {/* Partículas animadas */}
+                {particles.map((particle) => (
+                  <motion.div
+                    key={particle.id}
+                    className="absolute w-1 h-1 bg-white/30 rounded-full"
+                    style={{
+                      left: `${particle.x}%`,
+                      top: `${particle.y}%`
+                    }}
+                    animate={{
+                      y: [-10, 10, -10],
+                      opacity: [0.3, 1, 0.3]
+                    }}
+                    transition={{
+                      duration: 3,
+                      delay: particle.delay,
+                      repeat: Infinity
+                    }}
+                  />
+                ))}
+              </div>
 
-                {/* Checkpoints */}
-                {checkpoints.map((checkpoint, index) => {
-                    const isCompleted = checkpoint.level <= currentLevel;
-                    const isCurrent = index === currentPosition;
-                    const xPos = isMobile ? checkpoint.mx : checkpoint.x;
-                    const yPos = isMobile ? checkpoint.my : checkpoint.y;
-                    
-                    return (
-                    <motion.div
-                        key={checkpoint.id}
-                        className="absolute"
-                        style={{ 
-                        left: `${xPos}%`, 
-                        top: `${yPos}%`,
-                        transform: 'translate(-50%, -50%)'
-                        }}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        onMouseEnter={() => !isMobile && setHoveredCheckpoint(checkpoint)}
-                        onMouseLeave={() => !isMobile && setHoveredCheckpoint(null)}
-                        onClick={() => handleCheckpointClick(checkpoint)}
-                    >
-                        <motion.div
-                        className={`relative cursor-pointer ${checkpoint.milestone ? 'scale-110 md:scale-125' : ''}`}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.95 }}
-                        >
-                        {/* Aura para checkpoint actual */}
-                        {isCurrent && (
-                            <motion.div
-                            className="absolute inset-0 rounded-full"
-                            animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0.2, 0.8] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            >
-                            <div className="w-full h-full rounded-full bg-purple-500" />
-                            </motion.div>
-                        )}
-
-                        {/* Círculo del checkpoint */}
-                        <div className={`
-                            relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center
-                            ${isCompleted 
-                            ? `bg-gradient-to-br ${checkpoint.color} shadow-2xl` 
-                            : 'bg-gray-700 opacity-60'
-                            }
-                            ${checkpoint.milestone ? 'ring-2 md:ring-4 ring-yellow-400 ring-offset-2 md:ring-offset-4 ring-offset-transparent' : ''}
-                        `}>
-                            <span className="text-2xl md:text-3xl">
-                            {isCompleted ? checkpoint.emoji : '🔒'}
-                            </span>
-                        </div>
-
-                        {/* Badge de hito */}
-                        {checkpoint.milestone && isCompleted && (
-                            <motion.div 
-                            className="absolute -top-1 -right-1 md:-top-2 md:-right-2"
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            >
-                            <Trophy className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
-                            </motion.div>
-                        )}
-
-                        {/* Indicador "Estás aquí" con panda más grande */}
-                        {isCurrent && (
-                            <motion.div 
-                            className="absolute -bottom-12 md:-bottom-14 left-1/2 transform -translate-x-1/2"
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            >
-                            <Badge className="bg-purple-600 text-white px-2 md:px-3 py-1 md:py-2">
-                                <img 
-                                src="/images/panda-logo.png" 
-                                alt="Tu posición" 
-                                className="w-6 h-6 md:w-8 md:h-8 mr-1"
-                                />
-                                <span className="text-xs md:text-sm">Aquí</span>
-                            </Badge>
-                            </motion.div>
-                        )}
-                        </motion.div>
-
-                        {/* Nombre del checkpoint */}
-                        {(!isMobile || isCurrent) && (
-                        <>
-                            <p className={`
-                            text-center mt-2 font-bold text-xs md:text-sm
-                            ${isCompleted ? 'text-white' : 'text-gray-400'}
-                            `}>
-                            {checkpoint.name}
-                            </p>
-                            <p className="text-center text-xs text-gray-500">
-                            Nivel {checkpoint.level}
-                            </p>
-                        </>
-                        )}
-                    </motion.div>
-                    );
-                })}
-                
-                {/* Tooltip para desktop */}
-                {!isMobile && (
-                    <AnimatePresence>
-                    {hoveredCheckpoint && (
-                        <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="fixed bottom-4 left-4 right-4 z-50 max-w-md mx-auto"
-                        >
-                        <Card className="bg-purple-900/95 border-purple-500/50 backdrop-blur">
-                            <CardContent className="p-4">
-                            <div className="flex items-center gap-3">
-                                <span className="text-4xl">{hoveredCheckpoint.emoji}</span>
-                                <div className="flex-1">
-                                <p className="text-white font-bold">{hoveredCheckpoint.name}</p>
-                                <p className="text-purple-200 text-sm">{hoveredCheckpoint.description}</p>
-                                {hoveredCheckpoint.rewards && (
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                    {hoveredCheckpoint.rewards.map((reward, i) => (
-                                        <Badge key={i} variant="secondary" className="text-xs">
-                                        {reward}
-                                        </Badge>
-                                    ))}
-                                    </div>
-                                )}
-                                </div>
-                                {hoveredCheckpoint.level <= currentLevel ? (
-                                <CheckCircle className="w-8 h-8 text-green-400 flex-shrink-0" />
-                                ) : (
-                                <Lock className="w-8 h-8 text-gray-400 flex-shrink-0" />
-                                )}
-                            </div>
-                            </CardContent>
-                        </Card>
-                        </motion.div>
-                    )}
-                    </AnimatePresence>
-                )}
-                </div>
-            </CardContent>
-            </Card>
-
-            {/* Panel de información (solo mobile cuando se selecciona) */}
-            <AnimatePresence>
-            {selectedCheckpoint && (
+              {/* Decoraciones del mapa */}
+              {decorations.map((deco, index) => (
                 <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="mt-6"
+                  key={`deco-${index}`}
+                  className="absolute text-2xl md:text-3xl"
+                  style={{
+                    left: `${deco.x}%`,
+                    top: `${deco.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    rotate: deco.type === 'butterfly' ? [0, 10, -10, 0] : 0
+                  }}
+                  transition={{
+                    duration: 4,
+                    delay: index * 0.2,
+                    repeat: Infinity
+                  }}
                 >
-                <Card className="bg-gradient-to-r from-purple-800/50 to-indigo-800/50 backdrop-blur border-purple-500/30">
-                    <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 md:gap-4">
-                        <div className={`
-                            w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${selectedCheckpoint.color} 
-                            flex items-center justify-center shadow-xl
-                        `}>
-                            <span className="text-3xl md:text-4xl">{selectedCheckpoint.emoji}</span>
-                        </div>
-                        <div>
-                            <CardTitle className="text-xl md:text-2xl text-white">
-                            {selectedCheckpoint.name}
-                            </CardTitle>
-                            <p className="text-purple-200 text-sm md:text-base">{selectedCheckpoint.description}</p>
-                        </div>
-                        </div>
-                        <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedCheckpoint(null)}
-                        className="text-white hover:bg-purple-700"
-                        >
-                        ✕
-                        </Button>
-                    </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                    <div>
-                        <p className="text-purple-200 mb-3 flex items-center gap-2">
-                        <Gift className="w-5 h-5" />
-                        Recompensas:
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3">
-                        {selectedCheckpoint.rewards?.map((reward, i) => (
-                            <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            >
-                            <Badge className="p-2 md:p-3 bg-purple-700/50 text-white border-purple-500 w-full">
-                                <Sparkles className="w-3 h-3 md:w-4 md:h-4 mr-2" />
-                                {reward}
-                            </Badge>
-                            </motion.div>
-                        ))}
-                        </div>
-                    </div>
-
-                    {selectedCheckpoint.level <= currentLevel ? (
-                        <motion.div 
-                        className="flex items-center gap-3 p-3 md:p-4 bg-green-500/20 rounded-lg"
-                        initial={{ scale: 0.9 }}
-                        animate={{ scale: 1 }}
-                        >
-                        <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-green-400" />
-                        <div>
-                            <p className="text-green-400 font-bold">¡Completado!</p>
-                            <p className="text-green-300 text-xs md:text-sm">Todas las recompensas desbloqueadas</p>
-                        </div>
-                        </motion.div>
-                    ) : (
-                        <div className="p-3 md:p-4 bg-purple-700/30 rounded-lg">
-                        <div className="flex items-center justify-between">
-                            <div>
-                            <p className="text-purple-200">Nivel {selectedCheckpoint.level} requerido</p>
-                            <p className="text-purple-300 text-xs md:text-sm mt-1">
-                                Te faltan {selectedCheckpoint.level - currentLevel} niveles
-                            </p>
-                            </div>
-                            <Lock className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
-                        </div>
-                        </div>
-                    )}
-
-                    {selectedCheckpoint.milestone && (
-                        <div className="p-3 md:p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg">
-                        <div className="flex items-center gap-3">
-                            <Trophy className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
-                            <div>
-                            <p className="text-yellow-400 font-bold">¡Hito Principal!</p>
-                            <p className="text-yellow-300 text-xs md:text-sm">
-                                Logro especial en tu transformación
-                            </p>
-                            </div>
-                        </div>
-                        </div>
-                    )}
-                    </CardContent>
-                </Card>
+                  {deco.icon}
                 </motion.div>
-            )}
-            </AnimatePresence>
-        </div>
-        </>
-    );
-    };
+              ))}
 
-    export default ProgressMapPage;
+              {/* Camino SVG */}
+              <svg className="absolute inset-0 w-full h-full">
+                {levels.slice(0, -1).map((level, index) => {
+                  const nextLevel = levels[index + 1];
+                  return (
+                    <motion.line
+                      key={`path-${index}`}
+                      x1={`${level.x}%`}
+                      y1={`${level.y}%`}
+                      x2={`${nextLevel.x}%`}
+                      y2={`${nextLevel.y}%`}
+                      stroke={level.unlocked && nextLevel.unlocked ? "#a78bfa" : "#4c1d95"}
+                      strokeWidth={isMobile ? "2" : "3"}
+                      strokeDasharray={level.unlocked && nextLevel.unlocked ? "0" : "5 5"}
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 2, delay: index * 0.1 }}
+                    />
+                  );
+                })}
+              </svg>
+
+              {/* Nodos del mapa */}
+              {levels.map((level, index) => (
+                <motion.div
+                  key={level.id}
+                  className="absolute"
+                  style={{
+                    left: `${level.x}%`,
+                    top: `${level.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedLevel(level)}
+                    className={`
+                      relative w-12 h-12 md:w-16 md:h-16 rounded-full
+                      flex items-center justify-center
+                      transition-all duration-300 cursor-pointer
+                      ${level.id === currentLevel 
+                        ? 'bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg shadow-yellow-500/50' 
+                        : level.unlocked
+                          ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                          : 'bg-gray-700/50'}
+                    `}
+                  >
+                    {level.id === currentLevel ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      >
+                        <span className="text-2xl md:text-3xl">🐼</span>
+                      </motion.div>
+                    ) : level.unlocked ? (
+                      <CheckCircle className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                    ) : (
+                      <Lock className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
+                    )}
+                    
+                    {level.id === currentLevel && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full border-4 border-yellow-400"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    )}
+                  </motion.button>
+                  
+                  <motion.div 
+                    className="mt-2 text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.1 + 0.3 }}
+                  >
+                    <p className={`
+                      text-xs md:text-sm font-bold
+                      ${level.unlocked ? 'text-white' : 'text-gray-500'}
+                    `}>
+                      {level.name}
+                    </p>
+                    <p className={`
+                      text-xs
+                      ${level.unlocked ? 'text-purple-300' : 'text-gray-600'}
+                    `}>
+                      Nivel {level.id}
+                    </p>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Modal de detalle del nivel */}
+          <AnimatePresence>
+            {selectedLevel && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                onClick={() => setSelectedLevel(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="bg-gradient-to-br from-purple-900/95 to-indigo-900/95 rounded-2xl p-6 max-w-md w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {selectedLevel.name}
+                  </h3>
+                  <Badge className="mb-4">Nivel {selectedLevel.id}</Badge>
+                  
+                  <p className="text-purple-200 mb-4">
+                    {selectedLevel.unlocked 
+                      ? 'Has completado este nivel. ¡Sigue adelante!' 
+                      : 'Este nivel aún está bloqueado. ¡Continúa tu progreso para desbloquearlo!'}
+                  </p>
+                  
+                  <Button 
+                    className="w-full"
+                    onClick={() => setSelectedLevel(null)}
+                  >
+                    Cerrar
+                  </Button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ProgressMapPage;
