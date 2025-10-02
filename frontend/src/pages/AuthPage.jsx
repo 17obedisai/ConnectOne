@@ -1,99 +1,143 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import EnergikoPanda from '@/components/EnergikoPanda';
-import { ArrowLeft, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { 
+  Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2, 
+  Sparkles, CheckCircle, ChevronRight, ArrowLeft 
+} from 'lucide-react';
+import axios from 'axios';
+import confetti from 'canvas-confetti';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
+    nombre: '',
     email: '',
     password: '',
-    fullName: '',
     confirmPassword: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signIn, signUp } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      const profile = JSON.parse(localStorage.getItem(`profile_${user.id}`));
-      if (profile?.questionnaire_completed) {
-        navigate('/dashboard');
-      } else {
-        navigate('/onboarding');
+  // Partículas flotantes
+  const floatingElements = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    emoji: ['✨', '⭐', '💫', '🌟', '🐼'][Math.floor(Math.random() * 5)],
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    duration: 15 + Math.random() * 20,
+    delay: Math.random() * 5
+  }));
+
+  // Requisitos de contraseña
+  const passwordRequirements = [
+    { text: 'Al menos 6 caracteres', valid: formData.password.length >= 6 },
+    { text: 'Una letra mayúscula', valid: /[A-Z]/.test(formData.password) },
+    { text: 'Una letra minúscula', valid: /[a-z]/.test(formData.password) },
+    { text: 'Un número', valid: /[0-9]/.test(formData.password) }
+  ];
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    
+    if (formData.password.length < 6) {
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+    
+    if (!isLogin) {
+      if (!formData.nombre || formData.nombre.length < 2) {
+        newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
+      }
+      
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+      if (!passwordRegex.test(formData.password)) {
+        newErrors.password = 'La contraseña debe tener mayúsculas, minúsculas y números';
+      }
+      
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Las contraseñas no coinciden';
       }
     }
-  }, [user, navigate]);
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    if (!formData.email || !formData.password) {
-      toast({ title: "Error", description: "Por favor completa todos los campos requeridos", variant: "destructive" });
-      setIsLoading(false);
-      return;
-    }
-
-    if (!isLogin) {
-      if (!formData.fullName) {
-        toast({ title: "Error", description: "Por favor ingresa tu nombre completo", variant: "destructive" });
-        setIsLoading(false);
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        toast({ title: "Error", description: "Las contraseñas no coinciden", variant: "destructive" });
-        setIsLoading(false);
-        return;
-      }
-    }
-
+    
+    if (!validateForm()) return;
+    
+    setLoading(true);
+    setErrors({});
+    
     try {
-      if (isLogin) {
-        const result = await signIn(formData.email, formData.password);
-        if (result.success) {
-          toast({ title: "¡Bienvenido de vuelta!", description: "Has iniciado sesión exitosamente" });
-          const profile = JSON.parse(localStorage.getItem(`profile_${result.user.id}`));
-          if (profile?.questionnaire_completed) {
-            navigate('/dashboard');
-          } else {
-            navigate('/onboarding');
-          }
-        } else {
-          toast({ title: "Error al iniciar sesión", description: result.message, variant: "destructive" });
-        }
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const payload = isLogin 
+        ? { email: formData.email, password: formData.password }
+        : { nombre: formData.nombre, email: formData.email, password: formData.password };
+      
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`,
+        payload,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      
+      // Guardar token y datos del usuario
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.usuario));
+      
+      // Configurar axios para futuras peticiones
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      toast({
+        title: isLogin ? "¡Bienvenido de vuelta!" : "¡Cuenta creada!",
+        description: isLogin ? "Has iniciado sesión exitosamente" : "Bienvenido a ConnectONE",
+      });
+
+      // Verificar si completó el cuestionario
+      const profile = response.data.usuario.profile;
+      if (profile?.questionnaire_completed) {
+        navigate('/dashboard');
       } else {
-        const result = await signUp(formData.email, formData.password, formData.fullName);
-        if (result.success) {
-          toast({ title: "¡Cuenta creada!", description: "Ahora puedes iniciar sesión.", duration: 9000 });
-          setIsLogin(true);
-        } else {
-          toast({ title: "Error de registro", description: result.message, variant: "destructive" });
-        }
+        navigate('/questionnaire');
       }
+
     } catch (error) {
-      toast({ title: "Error", description: "Algo salió mal. Por favor intenta de nuevo.", variant: "destructive" });
+      const message = error.response?.data?.mensaje || 'Error de conexión con el servidor';
+      setErrors({ general: message });
+      
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive"
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -101,152 +145,235 @@ const AuthPage = () => {
     <>
       <Helmet>
         <title>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'} - ConnectONE</title>
-        <meta name="description" content={isLogin ? 'Inicia sesión en ConnectONE y continúa tu viaje de bienestar personal' : 'Crea tu cuenta en ConnectONE y comienza tu transformación personal'} />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-background">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background -z-10" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 relative overflow-hidden">
         
+        {/* Partículas flotantes */}
+        {floatingElements.map(el => (
+          <motion.div
+            key={el.id}
+            className="absolute text-2xl opacity-20 pointer-events-none"
+            initial={{ x: `${el.x}%`, y: `${el.y}%` }}
+            animate={{
+              x: [`${el.x}%`, `${(el.x + 20) % 100}%`],
+              y: [`${el.y}%`, `${(el.y - 20) % 100}%`],
+            }}
+            transition={{
+              duration: el.duration,
+              delay: el.delay,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            {el.emoji}
+          </motion.div>
+        ))}
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           className="relative z-10 w-full max-w-md"
         >
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="text-foreground hover:bg-primary/10 mb-6"
+            className="text-white hover:bg-purple-800/30 mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver al inicio
           </Button>
 
-          <Card className="glass-effect border-border">
-            <CardHeader className="text-center pb-4">
-              <EnergikoPanda mood="happy" size="medium" className="mx-auto mb-4" />
-              <CardTitle className="text-2xl font-bold text-foreground">
-                {isLogin ? '¡Hola de nuevo!' : '¡Únete a ConnectONE!'}
+          {/* Header con Panda */}
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.05, 1],
+                rotate: [-2, 2, -2]
+              }}
+              transition={{ duration: 4, repeat: Infinity }}
+              className="inline-block"
+            >
+              <EnergikoPanda pandaType="logo" size="large" className="mx-auto mb-4" />
+            </motion.div>
+            
+            <h1 className="text-4xl font-bold text-white">ConnectONE</h1>
+            <p className="text-purple-200">
+              {isLogin ? 'Tu compañero de bienestar' : 'Únete a la aventura'}
+            </p>
+          </motion.div>
+
+          <Card className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-xl border-purple-500/30">
+            <CardHeader>
+              <CardTitle className="text-2xl text-white">
+                {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
               </CardTitle>
-              <p className="text-muted-foreground">
+              <CardDescription className="text-purple-200">
                 {isLogin 
                   ? 'Enérgiko te estaba esperando' 
-                  : 'Comienza tu viaje de transformación'
-                }
-              </p>
+                  : 'Comienza tu viaje de transformación'}
+              </CardDescription>
             </CardHeader>
 
             <CardContent>
+              {errors.general && (
+                <Alert className="mb-4 bg-red-500/20 border-red-500/50">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-red-200">
+                    {errors.general}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-foreground">
-                      Nombre completo
-                    </Label>
+                  <motion.div 
+                    className="space-y-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    <Label className="text-purple-200">Nombre completo</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
                       <Input
-                        id="fullName"
-                        name="fullName"
                         type="text"
-                        placeholder="Tu nombre completo"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
-                        required={!isLogin}
+                        placeholder="Juan Pérez"
+                        className="pl-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
+                        value={formData.nombre}
+                        onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                        disabled={loading}
                       />
                     </div>
-                  </div>
+                    {errors.nombre && (
+                      <p className="text-sm text-red-400">{errors.nombre}</p>
+                    )}
+                  </motion.div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground">
-                    Email
-                  </Label>
+                  <Label className="text-purple-200">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
                     <Input
-                      id="email"
-                      name="email"
                       type="email"
                       placeholder="tu@email.com"
+                      className="pl-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
                       value={formData.email}
-                      onChange={handleInputChange}
-                      className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
-                      required
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      disabled={loading}
                     />
                   </div>
+                  {errors.email && (
+                    <p className="text-sm text-red-400">{errors.email}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground">
-                    Contraseña
-                  </Label>
+                  <Label className="text-purple-200">Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
                     <Input
-                      id="password"
-                      name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Tu contraseña"
+                      placeholder="••••••••"
+                      className="pl-10 pr-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
                       value={formData.password}
-                      onChange={handleInputChange}
-                      className="pl-10 pr-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
-                      required
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      disabled={loading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-3 text-purple-400 hover:text-purple-300"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  
+                  {!isLogin && formData.password && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      {passwordRequirements.map((req, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          {req.valid ? (
+                            <CheckCircle className="w-3 h-3 text-green-400" />
+                          ) : (
+                            <div className="w-3 h-3 rounded-full border border-purple-500" />
+                          )}
+                          <span className={`text-xs ${req.valid ? 'text-green-400' : 'text-purple-300'}`}>
+                            {req.text}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {errors.password && (
+                    <p className="text-sm text-red-400">{errors.password}</p>
+                  )}
                 </div>
 
                 {!isLogin && (
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-foreground">
-                      Confirmar contraseña
-                    </Label>
+                    <Label className="text-purple-200">Confirmar contraseña</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
                       <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        placeholder="Confirma tu contraseña"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="pl-10 pr-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
                         value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        className="pl-10 bg-muted border-border text-foreground placeholder:text-muted-foreground"
-                        required={!isLogin}
+                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                        disabled={loading}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-3 text-purple-400 hover:text-purple-300"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
+                    {errors.confirmPassword && (
+                      <p className="text-sm text-red-400">{errors.confirmPassword}</p>
+                    )}
                   </div>
                 )}
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold py-3 rounded-lg primary-glow transition-all duration-300"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 h-12 rounded-xl"
                 >
-                  {isLoading 
-                    ? 'Procesando...' 
-                    : isLogin 
-                      ? 'Iniciar Sesión' 
-                      : 'Crear Cuenta'
-                  }
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </form>
 
               <div className="mt-6 text-center">
-                <p className="text-muted-foreground">
+                <p className="text-purple-200">
                   {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
                 </p>
                 <Button
                   variant="link"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-primary hover:text-primary/80 font-semibold"
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setErrors({});
+                  }}
+                  className="text-purple-400 hover:text-purple-300 font-semibold"
                 >
                   {isLogin ? 'Crear cuenta' : 'Iniciar sesión'}
                 </Button>

@@ -15,7 +15,8 @@ import {
   Edit3, Save, Plus, Trash2, ChevronLeft, ChevronRight,
   Trophy, Flame, Sparkles, X, Check, Zap, TrendingUp,
   Lock, Award, Calendar, Clock, MapPin, Gift, Shield,
-  Palette, Activity, Users, User // <-- CORRECCIÓN: User AÑADIDO
+  Palette, Activity, Users, User, Mountain, Gamepad2,
+  Sunrise, Moon, Sun, CloudRain, Wind, Droplets
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
@@ -46,7 +47,12 @@ const ProfilePage = () => {
     estiloVida: savedProfile?.estiloVida || '',
     tiempoDisponible: savedProfile?.tiempoDisponible || '30min',
     nivelActividad: savedProfile?.nivelActividad || 'moderado',
-    pandaSkin: savedProfile?.pandaSkin || 1
+    pandaSkin: savedProfile?.pandaSkin || 1,
+    // Nuevos campos
+    ubicacion: savedProfile?.ubicacion || '',
+    horarioPreferido: savedProfile?.horarioPreferido || 'mañana',
+    motivacion: savedProfile?.motivacion || '',
+    logrosDeseados: savedProfile?.logrosDeseados || []
   });
 
   const level = stats?.level || 1;
@@ -131,6 +137,41 @@ const ProfilePage = () => {
     { value: 'viajes', label: 'Viajes', icon: '✈️', color: 'from-cyan-500 to-blue-600' }
   ];
 
+  const addGoal = (type) => {
+    if (!newGoalText.trim()) return;
+    
+    const newGoals = type === 'corto' 
+      ? [...profileData.metasCorto, newGoalText]
+      : [...profileData.metasLargo, newGoalText];
+    
+    setProfileData({
+      ...profileData,
+      [type === 'corto' ? 'metasCorto' : 'metasLargo']: newGoals
+    });
+    
+    setNewGoalText('');
+    setShowGoalInput({ ...showGoalInput, [type]: false });
+  };
+
+  const removeGoal = (type, index) => {
+    const newGoals = type === 'corto'
+      ? profileData.metasCorto.filter((_, i) => i !== index)
+      : profileData.metasLargo.filter((_, i) => i !== index);
+    
+    setProfileData({
+      ...profileData,
+      [type === 'corto' ? 'metasCorto' : 'metasLargo']: newGoals
+    });
+  };
+
+  const toggleInteres = (interes) => {
+    const newIntereses = profileData.intereses.includes(interes)
+      ? profileData.intereses.filter(i => i !== interes)
+      : [...profileData.intereses, interes];
+    
+    setProfileData({ ...profileData, intereses: newIntereses });
+  };
+
   return (
     <>
       <Helmet>
@@ -138,6 +179,7 @@ const ProfilePage = () => {
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+        {/* Partículas flotantes */}
         {floatingElements.map(el => (
           <motion.div
             key={el.id}
@@ -160,6 +202,7 @@ const ProfilePage = () => {
 
         <div className="max-w-7xl mx-auto p-4 relative z-10">
           
+          {/* Header con avatar y stats */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,6 +211,7 @@ const ProfilePage = () => {
             <Card className="bg-gradient-to-br from-purple-900/20 via-indigo-900/20 to-purple-900/20 backdrop-blur-xl border-purple-500/30 overflow-visible">
               <div className="relative">
                 <div className="flex flex-col lg:flex-row items-center gap-8 p-8">
+                  {/* Avatar del panda */}
                   <motion.div className="relative">
                     <motion.div
                       className={`absolute -inset-8 bg-gradient-to-r ${getRarityColor(pandaVersions[selectedPanda - 1]?.rarity)} rounded-full blur-3xl opacity-50`}
@@ -202,30 +246,6 @@ const ProfilePage = () => {
                         animate={{ scale: 1, opacity: 1, rotate: 0 }}
                         transition={{ type: "spring", stiffness: 200 }}
                       />
-                      
-                      {[...Array(6)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute text-3xl"
-                          style={{
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                          }}
-                          animate={{
-                            y: [-20, 20],
-                            x: [-20, 20],
-                            rotate: [0, 360],
-                          }}
-                          transition={{
-                            duration: 3 + i,
-                            repeat: Infinity,
-                            ease: "linear",
-                            delay: i * 0.5
-                          }}
-                        >
-                          ✨
-                        </motion.div>
-                      ))}
                     </motion.div>
 
                     <motion.div
@@ -236,6 +256,7 @@ const ProfilePage = () => {
                     </motion.div>
                   </motion.div>
 
+                  {/* Info y stats */}
                   <div className="flex-1 text-center lg:text-left space-y-6">
                     <div>
                       <motion.h1 
@@ -283,23 +304,13 @@ const ProfilePage = () => {
                         </motion.div>
                       ))}
                     </motion.div>
-
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button 
-                        onClick={handleSelectPanda}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg"
-                        size="lg"
-                      >
-                        <Sparkles className="w-5 h-5 mr-2" />
-                        Usar esta skin
-                      </Button>
-                    </motion.div>
                   </div>
                 </div>
               </div>
             </Card>
           </motion.div>
 
+          {/* Tabs con contenido completo */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-4 w-full bg-purple-900/30 backdrop-blur p-1">
               <TabsTrigger value="avatar" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600">
@@ -320,6 +331,7 @@ const ProfilePage = () => {
               </TabsTrigger>
             </TabsList>
 
+            {/* TAB: SKINS */}
             <TabsContent value="avatar">
               <Card className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 backdrop-blur border-purple-500/30">
                 <CardHeader>
@@ -335,7 +347,12 @@ const ProfilePage = () => {
                         whileTap={{ scale: 0.95 }}
                         onHoverStart={() => setHoveredPanda(panda.id)}
                         onHoverEnd={() => setHoveredPanda(null)}
-                        onClick={() => panda.unlocked && setSelectedPanda(index + 1)}
+                        onClick={() => {
+                          if (panda.unlocked) {
+                            setSelectedPanda(index + 1);
+                            handleSelectPanda();
+                          }
+                        }}
                         className={`relative cursor-pointer ${!panda.unlocked && 'opacity-50'}`}
                       >
                         <Card className={`
@@ -383,8 +400,476 @@ const ProfilePage = () => {
               </Card>
             </TabsContent>
 
-            {/* A partir de aquí irían las otras TabsContent */}
-            
+            {/* TAB: INFORMACIÓN PERSONAL */}
+            <TabsContent value="personal">
+              <Card className="bg-gradient-to-br from-blue-800/30 to-cyan-800/30 backdrop-blur border-blue-500/30">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl text-white">Información Personal</CardTitle>
+                    <p className="text-blue-200">Personaliza tu perfil</p>
+                  </div>
+                  <Button
+                    onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600"
+                  >
+                    {isEditing ? (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Guardar
+                      </>
+                    ) : (
+                      <>
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Editar
+                      </>
+                    )}
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Nombre */}
+                    <div className="space-y-2">
+                      <Label className="text-white">Nombre</Label>
+                      <Input
+                        value={profileData.nombre}
+                        onChange={(e) => setProfileData({...profileData, nombre: e.target.value})}
+                        disabled={!isEditing}
+                        className="bg-blue-900/30 border-blue-500/30 text-white"
+                      />
+                    </div>
+
+                    {/* Edad */}
+                    <div className="space-y-2">
+                      <Label className="text-white">Edad</Label>
+                      <Input
+                        type="number"
+                        value={profileData.edad}
+                        onChange={(e) => setProfileData({...profileData, edad: e.target.value})}
+                        disabled={!isEditing}
+                        className="bg-blue-900/30 border-blue-500/30 text-white"
+                        placeholder="Tu edad"
+                      />
+                    </div>
+
+                    {/* Ubicación */}
+                    <div className="space-y-2">
+                      <Label className="text-white">Ubicación</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 w-4 h-4 text-blue-400" />
+                        <Input
+                          value={profileData.ubicacion}
+                          onChange={(e) => setProfileData({...profileData, ubicacion: e.target.value})}
+                          disabled={!isEditing}
+                          className="bg-blue-900/30 border-blue-500/30 text-white pl-10"
+                          placeholder="Ciudad, País"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Horario preferido */}
+                    <div className="space-y-2">
+                      <Label className="text-white">Horario Preferido</Label>
+                      <Select
+                        value={profileData.horarioPreferido}
+                        onValueChange={(value) => setProfileData({...profileData, horarioPreferido: value})}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger className="bg-blue-900/30 border-blue-500/30 text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mañana">
+                            <div className="flex items-center gap-2">
+                              <Sunrise className="w-4 h-4" />
+                              Mañana (6AM - 12PM)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="tarde">
+                            <div className="flex items-center gap-2">
+                              <Sun className="w-4 h-4" />
+                              Tarde (12PM - 6PM)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="noche">
+                            <div className="flex items-center gap-2">
+                              <Moon className="w-4 h-4" />
+                              Noche (6PM - 12AM)
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  <div className="space-y-2">
+                    <Label className="text-white">Biografía</Label>
+                    <Textarea
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                      disabled={!isEditing}
+                      className="bg-blue-900/30 border-blue-500/30 text-white min-h-[100px]"
+                      placeholder="Cuéntanos sobre ti..."
+                    />
+                  </div>
+
+                  {/* Nivel de actividad */}
+                  <div className="space-y-2">
+                    <Label className="text-white">Nivel de Actividad Física</Label>
+                    <Select
+                      value={profileData.nivelActividad}
+                      onValueChange={(value) => setProfileData({...profileData, nivelActividad: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-blue-900/30 border-blue-500/30 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sedentario">Sedentario</SelectItem>
+                        <SelectItem value="ligero">Actividad Ligera</SelectItem>
+                        <SelectItem value="moderado">Moderadamente Activo</SelectItem>
+                        <SelectItem value="activo">Muy Activo</SelectItem>
+                        <SelectItem value="atleta">Atleta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Tiempo disponible */}
+                  <div className="space-y-2">
+                    <Label className="text-white">Tiempo Disponible Diario</Label>
+                    <Select
+                      value={profileData.tiempoDisponible}
+                      onValueChange={(value) => setProfileData({...profileData, tiempoDisponible: value})}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger className="bg-blue-900/30 border-blue-500/30 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15min">15 minutos</SelectItem>
+                        <SelectItem value="30min">30 minutos</SelectItem>
+                        <SelectItem value="1hora">1 hora</SelectItem>
+                        <SelectItem value="2horas">2+ horas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* TAB: OBJETIVOS */}
+            <TabsContent value="objetivos">
+              <Card className="bg-gradient-to-br from-green-800/30 to-emerald-800/30 backdrop-blur border-green-500/30">
+                <CardHeader>
+                  <CardTitle className="text-2xl text-white">Mis Objetivos</CardTitle>
+                  <p className="text-green-200">Define tus metas y aspiraciones</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Objetivo principal */}
+                  <div className="space-y-2">
+                    <Label className="text-white">Objetivo Principal</Label>
+                    <Select
+                      value={profileData.objetivoPrincipal}
+                      onValueChange={(value) => setProfileData({...profileData, objetivoPrincipal: value})}
+                    >
+                      <SelectTrigger className="bg-green-900/30 border-green-500/30 text-white">
+                        <SelectValue placeholder="Selecciona tu objetivo principal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="perderpeso">Perder Peso</SelectItem>
+                        <SelectItem value="ganarmusculo">Ganar Músculo</SelectItem>
+                        <SelectItem value="mejorarsalud">Mejorar Salud General</SelectItem>
+                        <SelectItem value="reducirstress">Reducir Estrés</SelectItem>
+                        <SelectItem value="mejorarsueño">Mejorar Calidad del Sueño</SelectItem>
+                        <SelectItem value="productividad">Aumentar Productividad</SelectItem>
+                        <SelectItem value="habitos">Desarrollar Buenos Hábitos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Metas a corto plazo */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-white">Metas a Corto Plazo (30 días)</Label>
+                      <Button
+                        size="sm"
+                        onClick={() => setShowGoalInput({...showGoalInput, corto: true})}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <AnimatePresence>
+                      {showGoalInput.corto && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="flex gap-2"
+                        >
+                          <Input
+                            value={newGoalText}
+                            onChange={(e) => setNewGoalText(e.target.value)}
+                            placeholder="Nueva meta..."
+                            className="bg-green-900/30 border-green-500/30 text-white"
+                            onKeyPress={(e) => e.key === 'Enter' && addGoal('corto')}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => addGoal('corto')}
+                            className="bg-green-600"
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowGoalInput({...showGoalInput, corto: false})}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className="space-y-2">
+                      {profileData.metasCorto.map((meta, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-center justify-between p-3 bg-green-900/20 rounded-lg border border-green-500/30"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Target className="w-5 h-5 text-green-400" />
+                            <span className="text-white">{meta}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeGoal('corto', index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Metas a largo plazo */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-white">Metas a Largo Plazo (6 meses)</Label>
+                      <Button
+                        size="sm"
+                        onClick={() => setShowGoalInput({...showGoalInput, largo: true})}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <AnimatePresence>
+                      {showGoalInput.largo && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="flex gap-2"
+                        >
+                          <Input
+                            value={newGoalText}
+                            onChange={(e) => setNewGoalText(e.target.value)}
+                            placeholder="Nueva meta..."
+                            className="bg-green-900/30 border-green-500/30 text-white"
+                            onKeyPress={(e) => e.key === 'Enter' && addGoal('largo')}
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => addGoal('largo')}
+                            className="bg-green-600"
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShowGoalInput({...showGoalInput, largo: false})}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div className="space-y-2">
+                      {profileData.metasLargo.map((meta, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-center justify-between p-3 bg-green-900/20 rounded-lg border border-green-500/30"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Mountain className="w-5 h-5 text-green-400" />
+                            <span className="text-white">{meta}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeGoal('largo', index)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Motivación */}
+                  <div className="space-y-2">
+                    <Label className="text-white">¿Qué te motiva?</Label>
+                    <Textarea
+                      value={profileData.motivacion}
+                      onChange={(e) => setProfileData({...profileData, motivacion: e.target.value})}
+                      className="bg-green-900/30 border-green-500/30 text-white min-h-[100px]"
+                      placeholder="Describe qué te impulsa a mejorar cada día..."
+                    />
+                  </div>
+
+                  {/* Botón guardar */}
+                  <Button 
+                    onClick={handleSaveProfile}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar Objetivos
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* TAB: INTERESES */}
+            <TabsContent value="intereses">
+              <Card className="bg-gradient-to-br from-orange-800/30 to-red-800/30 backdrop-blur border-orange-500/30">
+                <CardHeader>
+                  <CardTitle className="text-2xl text-white">Mis Intereses</CardTitle>
+                  <p className="text-orange-200">Selecciona las actividades que más te gustan</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                    {interesesOpciones.map((interes) => (
+                      <motion.div
+                        key={interes.value}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => toggleInteres(interes.value)}
+                        className={`
+                          relative cursor-pointer p-4 rounded-xl transition-all
+                          ${profileData.intereses.includes(interes.value)
+                            ? 'bg-gradient-to-br ' + interes.color + ' shadow-lg'
+                            : 'bg-orange-900/30 hover:bg-orange-900/40 border border-orange-500/30'
+                          }
+                        `}
+                      >
+                        <div className="text-center">
+                          <span className="text-4xl mb-2 block">{interes.icon}</span>
+                          <p className="text-white font-semibold">{interes.label}</p>
+                        </div>
+                        {profileData.intereses.includes(interes.value) && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1"
+                          >
+                            <Check className="w-4 h-4 text-white" />
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Estilo de vida */}
+                  <div className="space-y-4">
+                    <Label className="text-white">Estilo de Vida</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {[
+                        { value: 'activo', label: 'Activo', icon: <Activity className="w-4 h-4" /> },
+                        { value: 'social', label: 'Social', icon: <Users className="w-4 h-4" /> },
+                        { value: 'creativo', label: 'Creativo', icon: <Palette className="w-4 h-4" /> },
+                        { value: 'intelectual', label: 'Intelectual', icon: <Brain className="w-4 h-4" /> },
+                        { value: 'relajado', label: 'Relajado', icon: <Coffee className="w-4 h-4" /> },
+                        { value: 'aventurero', label: 'Aventurero', icon: <Mountain className="w-4 h-4" /> }
+                      ].map(estilo => (
+                        <Button
+                          key={estilo.value}
+                          variant={profileData.estiloVida === estilo.value ? "default" : "outline"}
+                          onClick={() => setProfileData({...profileData, estiloVida: estilo.value})}
+                          className={profileData.estiloVida === estilo.value 
+                            ? "bg-gradient-to-r from-orange-600 to-red-600" 
+                            : "border-orange-500/30 text-orange-200 hover:bg-orange-900/30"
+                          }
+                        >
+                          {estilo.icon}
+                          {estilo.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Logros deseados */}
+                  <div className="space-y-4 mt-6">
+                    <Label className="text-white">Logros que quiero alcanzar</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        { value: 'marathon', label: 'Correr un maratón', icon: '🏃' },
+                        { value: 'meditation100', label: '100 días de meditación', icon: '🧘' },
+                        { value: 'book52', label: 'Leer 52 libros al año', icon: '📚' },
+                        { value: 'weightloss', label: 'Alcanzar mi peso ideal', icon: '⚖️' },
+                        { value: 'muscle', label: 'Ganar masa muscular', icon: '💪' },
+                        { value: 'sleep', label: 'Dormir 8 horas diarias', icon: '😴' }
+                      ].map(logro => (
+                        <motion.div
+                          key={logro.value}
+                          whileHover={{ scale: 1.02 }}
+                          onClick={() => {
+                            const newLogros = profileData.logrosDeseados.includes(logro.value)
+                              ? profileData.logrosDeseados.filter(l => l !== logro.value)
+                              : [...profileData.logrosDeseados, logro.value];
+                            setProfileData({...profileData, logrosDeseados: newLogros});
+                          }}
+                          className={`
+                            flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
+                            ${profileData.logrosDeseados.includes(logro.value)
+                              ? 'bg-gradient-to-r from-orange-600 to-red-600'
+                              : 'bg-orange-900/30 hover:bg-orange-900/40 border border-orange-500/30'
+                            }
+                          `}
+                        >
+                          <span className="text-2xl">{logro.icon}</span>
+                          <span className="text-white">{logro.label}</span>
+                          {profileData.logrosDeseados.includes(logro.value) && (
+                            <Check className="w-5 h-5 text-white ml-auto" />
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Botón guardar */}
+                  <Button 
+                    onClick={handleSaveProfile}
+                    className="w-full mt-6 bg-gradient-to-r from-orange-600 to-red-600"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar Intereses
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>

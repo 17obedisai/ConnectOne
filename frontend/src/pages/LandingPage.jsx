@@ -287,201 +287,93 @@ const LandingPage = () => {
         >
           {el.emoji}
         </motion.div>
-      ))}
+      ))} 
 
-      {/* Header mejorado */}
-      <motion.header 
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="fixed top-0 w-full z-50 bg-slate-900/80 backdrop-blur-xl border-b border-purple-500/20"
-      >
-        <nav className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <motion.div 
-              className="flex items-center gap-3"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="text-4xl">🐼</div>
-              <span className="text-2xl font-bold text-white">
-                Connect<span className="text-purple-400">ONE</span>
-              </span>
-            </motion.div>
+{/* HERO SECTION ÉPICA */}
+<section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 px-4">
+  <motion.div 
+    style={{ y, opacity }}
+    className="max-w-7xl mx-auto text-center relative z-10"
+  >
+    <motion.div
+      initial={{ scale: 0, rotate: -180 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ duration: 1, type: "spring" }}
+      className="inline-block mb-8"
+    >
+      <div className="relative">
+        {/* Gradiente de fondo - MOVIDO DETRÁS de la imagen */}
+        <motion.div
+          className="absolute -inset-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-3xl opacity-50 -z-10"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ 
+            duration: 10, 
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+        
+        {/* Imagen principal - MÁS GRANDE y por encima del gradiente */}
+        <motion.img
+          src="/images/panda-level-7.png"
+          alt="Energiko"
+          className="w-64 h-64 md:w-80 md:h-80 mx-auto object-contain relative z-10"
+          animate={{ 
+            y: [0, -20, 0],
+            rotate: [-5, 5, -5]
+          }}
+          transition={{ 
+            duration: 4, 
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+    </motion.div>
 
-            {/* Menú Desktop */}
-            <div className="hidden md:flex items-center gap-8">
-              <motion.a 
-                href="#caracteristicas" 
-                className="text-white hover:text-purple-400 transition"
-                whileHover={{ scale: 1.05 }}
-              >
-                Características
-              </motion.a>
-              <motion.a 
-                href="#como-funciona" 
-                className="text-white hover:text-purple-400 transition"
-                whileHover={{ scale: 1.05 }}
-              >
-                Cómo Funciona
-              </motion.a>
-              <motion.a 
-                href="#misiones" 
-                className="text-white hover:text-purple-400 transition"
-                whileHover={{ scale: 1.05 }}
-              >
-                Misiones
-              </motion.a>
-              <motion.a 
-                href="#testimonios" 
-                className="text-white hover:text-purple-400 transition"
-                whileHover={{ scale: 1.05 }}
-              >
-                Testimonios
-              </motion.a>
-              <motion.a 
-                href="#nosotros" 
-                className="text-white hover:text-purple-400 transition"
-                whileHover={{ scale: 1.05 }}
-              >
-                Nosotros
-              </motion.a>
-              <motion.a 
-                href="#faq" 
-                className="text-white hover:text-purple-400 transition"
-                whileHover={{ scale: 1.05 }}
-              >
-                FAQ
-              </motion.a>
-              
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
-                  onClick={() => navigate('/login')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold px-6 py-2 rounded-full shadow-lg hover:shadow-purple-500/50 transition-all"
-                >
-                  Comenzar Ahora
-                </Button>
-              </motion.div>
-            </div>
+    <motion.h1 
+      className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      Transforma tu vida en una
+      <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+        Aventura Épica
+      </span>
+    </motion.h1>
 
-            {/* Menú móvil */}
-            <button
-              className="md:hidden text-white"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </nav>
+    <motion.p 
+      className="text-xl md:text-2xl text-purple-200 mb-12 max-w-3xl mx-auto"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+    >
+      Gamifica tu bienestar, desbloquea tu potencial y conviértete en la mejor versión de ti mismo con ConnectONE
+    </motion.p>
 
-        {/* Menú móvil desplegable */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-slate-900/95 backdrop-blur-xl border-t border-purple-500/20"
-            >
-              <div className="flex flex-col gap-4 p-4">
-                <a href="#caracteristicas" className="text-white hover:text-purple-400">Características</a>
-                <a href="#como-funciona" className="text-white hover:text-purple-400">Cómo Funciona</a>
-                <a href="#misiones" className="text-white hover:text-purple-400">Misiones</a>
-                <a href="#testimonios" className="text-white hover:text-purple-400">Testimonios</a>
-                <a href="#nosotros" className="text-white hover:text-purple-400">Nosotros</a>
-                <a href="#faq" className="text-white hover:text-purple-400">FAQ</a>
-                <Button 
-                  onClick={() => navigate('/login')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                >
-                  Comenzar Ahora
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.header>
-
-      {/* HERO SECTION ÉPICA */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 px-4">
-        <motion.div 
-          style={{ y, opacity }}
-          className="max-w-7xl mx-auto text-center relative z-10"
+    <motion.div 
+      className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6 }}
+    >
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          onClick={() => {
+            navigate('/register');
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+          }}
+          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold px-10 py-6 rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all"
         >
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 1, type: "spring" }}
-            className="inline-block mb-8"
-          >
-            <div className="relative">
-              <motion.img
-                src="/images/panda-level-7.png"
-                alt="Energiko"
-                className="w-48 h-48 mx-auto object-contain"
-                animate={{ 
-                  y: [0, -20, 0],
-                  rotate: [-5, 5, -5]
-                }}
-                transition={{ 
-                  duration: 4, 
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-              <motion.div
-                className="absolute -inset-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-3xl opacity-50"
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360]
-                }}
-                transition={{ 
-                  duration: 10, 
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-            </div>
-          </motion.div>
-
-          <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            Transforma tu vida en una
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
-              Aventura Épica
-            </span>
-          </motion.h1>
-
-          <motion.p 
-            className="text-xl md:text-2xl text-purple-200 mb-12 max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            Gamifica tu bienestar, desbloquea tu potencial y conviértete en la mejor versión de ti mismo con ConnectONE
-          </motion.p>
-
-          <motion.div 
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                onClick={() => {
-                  navigate('/register');
-                  confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                  });
-                }}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold px-10 py-6 rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
+          <Sparkles className="w-5 h-5 mr-2" />
                 Comenzar mi Aventura
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
@@ -913,7 +805,7 @@ const LandingPage = () => {
               Somos estudiantes del SENA en Análisis y Desarrollo de Software
             </p>
             <Badge className="bg-green-600 text-white text-lg px-4 py-2">
-              Proyecto de Grado 2024
+              Proyecto de Grado 2025
             </Badge>
           </motion.div>
 

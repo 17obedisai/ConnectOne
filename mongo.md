@@ -1,0 +1,6 @@
+username
+obedisairodriguezome1717_db_user
+password
+gIgkmW23aSIFYMLu
+
+npm install mongodb
