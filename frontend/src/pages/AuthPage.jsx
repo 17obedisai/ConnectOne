@@ -101,23 +101,24 @@ const AuthPage = () => {
         { headers: { 'Content-Type': 'application/json' } }
       );
       
-      // Guardar token y datos del usuario
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.usuario));
-      
-      // Configurar axios para futuras peticiones
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        // CAMBIO AQUÍ: Corregir la ruta de los datos
+        const { token, data } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(data.user));
 
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+        // Configurar axios para futuras peticiones
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      toast({
-        title: isLogin ? "¡Bienvenido de vuelta!" : "¡Cuenta creada!",
-        description: isLogin ? "Has iniciado sesión exitosamente" : "Bienvenido a ConnectONE",
-      });
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+
+        toast({
+          title: isLogin ? "¡Bienvenido de vuelta!" : "¡Cuenta creada!",
+          description: isLogin ? "Has iniciado sesión exitosamente" : "Bienvenido a ConnectONE",
+        });
 
       // Verificar si completó el cuestionario
       const profile = response.data.usuario.profile;
