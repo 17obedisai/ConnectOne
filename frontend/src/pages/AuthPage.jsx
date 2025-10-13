@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import EnergikoPanda from '@/components/EnergikoPanda';
-import { 
-  Eye, EyeOff, Mail, Lock, User, AlertCircle, Loader2, 
-  Sparkles, CheckCircle, ChevronRight, ArrowLeft 
-} from 'lucide-react';
-import axios from 'axios';
+import { useAuth } from '@/contexts/AuthContext';
+import { Eye, EyeOff, Loader2, ChevronRight, Sparkles, Heart, Brain, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import EnergikoPanda from '@/components/EnergikoPanda';
 
 const AuthPage = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { login, register } = useAuth();
+  
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -29,26 +29,15 @@ const AuthPage = () => {
     confirmPassword: ''
   });
   
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [errors, setErrors] = useState({});
 
-  // Partículas flotantes
-  const floatingElements = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    emoji: ['✨', '⭐', '💫', '🌟', '🐼'][Math.floor(Math.random() * 5)],
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: 15 + Math.random() * 20,
-    delay: Math.random() * 5
-  }));
-
-  // Requisitos de contraseña
-  const passwordRequirements = [
-    { text: 'Al menos 6 caracteres', valid: formData.password.length >= 6 },
-    { text: 'Una letra mayúscula', valid: /[A-Z]/.test(formData.password) },
-    { text: 'Una letra minúscula', valid: /[a-z]/.test(formData.password) },
-    { text: 'Un número', valid: /[0-9]/.test(formData.password) }
-  ];
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -90,48 +79,76 @@ const AuthPage = () => {
     setErrors({});
     
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin 
-        ? { email: formData.email, password: formData.password }
-        : { nombre: formData.nombre, email: formData.email, password: formData.password };
+      let result;
       
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`,
-        payload,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      
-        // CAMBIO AQUÍ: Corregir la ruta de los datos
-        const { token, data } = response.data;
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-
-        // Configurar axios para futuras peticiones
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
+      if (isLogin) {
+        // LOGIN - Usuario existente
+        result = await login({
+          email: formData.email,
+          password: formData.password
         });
-
-        toast({
-          title: isLogin ? "¡Bienvenido de vuelta!" : "¡Cuenta creada!",
-          description: isLogin ? "Has iniciado sesión exitosamente" : "Bienvenido a ConnectONE",
-        });
-
-      // Verificar si completó el cuestionario
-      const profile = response.data.usuario.profile;
-      if (profile?.questionnaire_completed) {
-        navigate('/dashboard');
+        
+        if (result.success) {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+          
+          toast({
+            title: "¡Bienvenido de vuelta!",
+            description: "Has iniciado sesión exitosamente",
+          });
+          
+          // Si ya completó el cuestionario, va a dashboard
+          // Si no lo ha completado, va al cuestionario
+          if (result.hasCompletedQuestionnaire) {
+            navigate('/dashboard');
+          } else {
+            navigate('/questionnaire');
+          }
+        } else {
+          setErrors({ general: result.error });
+          toast({
+            title: "Error",
+            description: result.error,
+            variant: "destructive"
+          });
+        }
       } else {
-        navigate('/questionnaire');
+        // REGISTER - Usuario nuevo
+        result = await register({
+          nombre: formData.nombre,
+          email: formData.email,
+          password: formData.password
+        });
+        
+        if (result.success) {
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+          
+          toast({
+            title: "¡Cuenta creada!",
+            description: "Bienvenido a ConnectONE 🎉",
+          });
+          
+          // Nuevo usuario SIEMPRE va al cuestionario
+          navigate('/questionnaire');
+        } else {
+          setErrors({ general: result.error });
+          toast({
+            title: "Error",
+            description: result.error,
+            variant: "destructive"
+          });
+        }
       }
-
     } catch (error) {
-      const message = error.response?.data?.mensaje || 'Error de conexión con el servidor';
+      const message = 'Error de conexión con el servidor';
       setErrors({ general: message });
-      
       toast({
         title: "Error",
         description: message,
@@ -146,204 +163,196 @@ const AuthPage = () => {
     <>
       <Helmet>
         <title>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'} - ConnectONE</title>
+        <meta name="description" content="Únete a ConnectONE y transforma tu vida" />
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 relative overflow-hidden">
-        
-        {/* Partículas flotantes */}
-        {floatingElements.map(el => (
+        {/* Fondo animado */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            key={el.id}
-            className="absolute text-2xl opacity-20 pointer-events-none"
-            initial={{ x: `${el.x}%`, y: `${el.y}%` }}
+            className="absolute top-20 left-10 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl"
             animate={{
-              x: [`${el.x}%`, `${(el.x + 20) % 100}%`],
-              y: [`${el.y}%`, `${(el.y - 20) % 100}%`],
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3],
             }}
             transition={{
-              duration: el.duration,
-              delay: el.delay,
+              duration: 8,
               repeat: Infinity,
-              ease: "linear"
             }}
-          >
-            {el.emoji}
-          </motion.div>
-        ))}
+          />
+          <motion.div
+            className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl"
+            animate={{
+              scale: [1.2, 1, 1.2],
+              opacity: [0.2, 0.4, 0.2],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+            }}
+          />
+        </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative z-10 w-full max-w-md"
+          className="w-full max-w-md relative z-10"
         >
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="text-white hover:bg-purple-800/30 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al inicio
-          </Button>
+          <Card className="bg-slate-900/80 backdrop-blur-xl border-purple-500/30 shadow-2xl">
+            <CardHeader className="space-y-4">
+              <div className="flex justify-center">
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                >
+                  <EnergikoPanda pandaType="logo" size="medium" />
+                </motion.div>
+              </div>
+              
+              <div className="text-center">
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                  {isLogin ? '¡Bienvenido de vuelta!' : '¡Únete a ConnectONE!'}
+                </CardTitle>
+                <CardDescription className="text-purple-200 mt-2">
+                  {isLogin 
+                    ? 'Continúa tu viaje de transformación' 
+                    : 'Comienza tu aventura hacia el bienestar'}
+                </CardDescription>
+              </div>
 
-          {/* Header con Panda */}
-          <motion.div 
-            className="text-center mb-8"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.05, 1],
-                rotate: [-2, 2, -2]
-              }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="inline-block"
-            >
-              <EnergikoPanda pandaType="logo" size="large" className="mx-auto mb-4" />
-            </motion.div>
-            
-            <h1 className="text-4xl font-bold text-white">ConnectONE</h1>
-            <p className="text-purple-200">
-              {isLogin ? 'Tu compañero de bienestar' : 'Únete a la aventura'}
-            </p>
-          </motion.div>
-
-          <Card className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-xl border-purple-500/30">
-            <CardHeader>
-              <CardTitle className="text-2xl text-white">
-                {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-              </CardTitle>
-              <CardDescription className="text-purple-200">
-                {isLogin 
-                  ? 'Enérgiko te estaba esperando' 
-                  : 'Comienza tu viaje de transformación'}
-              </CardDescription>
+              {/* Características destacadas */}
+              {!isLogin && (
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  {[
+                    { icon: <Heart className="w-4 h-4" />, text: 'Bienestar' },
+                    { icon: <Brain className="w-4 h-4" />, text: 'Mindfulness' },
+                    { icon: <Zap className="w-4 h-4" />, text: 'Energía' }
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 + i * 0.1 }}
+                      className="flex flex-col items-center gap-1 p-2 bg-purple-500/10 rounded-lg"
+                    >
+                      <div className="text-purple-400">{item.icon}</div>
+                      <span className="text-xs text-purple-200">{item.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </CardHeader>
 
             <CardContent>
               {errors.general && (
-                <Alert className="mb-4 bg-red-500/20 border-red-500/50">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-red-200">
-                    {errors.general}
-                  </AlertDescription>
-                </Alert>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm"
+                >
+                  {errors.general}
+                </motion.div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {!isLogin && (
-                  <motion.div 
-                    className="space-y-2"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                  >
-                    <Label className="text-purple-200">Nombre completo</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
+                <AnimatePresence mode="wait">
+                  {!isLogin && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <Label htmlFor="nombre" className="text-purple-200">Nombre completo</Label>
                       <Input
+                        id="nombre"
+                        name="nombre"
                         type="text"
-                        placeholder="Juan Pérez"
-                        className="pl-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
                         value={formData.nombre}
-                        onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                        disabled={loading}
+                        onChange={handleChange}
+                        className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500"
+                        placeholder="Tu nombre"
                       />
-                    </div>
-                    {errors.nombre && (
-                      <p className="text-sm text-red-400">{errors.nombre}</p>
-                    )}
-                  </motion.div>
-                )}
+                      {errors.nombre && (
+                        <p className="text-sm text-red-400 mt-1">{errors.nombre}</p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                <div className="space-y-2">
-                  <Label className="text-purple-200">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
-                    <Input
-                      type="email"
-                      placeholder="tu@email.com"
-                      className="pl-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      disabled={loading}
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="email" className="text-purple-200">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500"
+                    placeholder="tu@email.com"
+                  />
                   {errors.email && (
-                    <p className="text-sm text-red-400">{errors.email}</p>
+                    <p className="text-sm text-red-400 mt-1">{errors.email}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-purple-200">Contraseña</Label>
+                <div>
+                  <Label htmlFor="password" className="text-purple-200">Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
                     <Input
+                      id="password"
+                      name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      className="pl-10 pr-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
                       value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      disabled={loading}
+                      onChange={handleChange}
+                      className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500 pr-10"
+                      placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-purple-400 hover:text-purple-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  
-                  {!isLogin && formData.password && (
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      {passwordRequirements.map((req, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          {req.valid ? (
-                            <CheckCircle className="w-3 h-3 text-green-400" />
-                          ) : (
-                            <div className="w-3 h-3 rounded-full border border-purple-500" />
-                          )}
-                          <span className={`text-xs ${req.valid ? 'text-green-400' : 'text-purple-300'}`}>
-                            {req.text}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
                   {errors.password && (
-                    <p className="text-sm text-red-400">{errors.password}</p>
+                    <p className="text-sm text-red-400 mt-1">{errors.password}</p>
                   )}
                 </div>
 
-                {!isLogin && (
-                  <div className="space-y-2">
-                    <Label className="text-purple-200">Confirmar contraseña</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-400" />
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="pl-10 pr-10 bg-purple-900/30 border-purple-500/30 text-white placeholder-purple-400"
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                        disabled={loading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-3 text-purple-400 hover:text-purple-300"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {errors.confirmPassword && (
-                      <p className="text-sm text-red-400">{errors.confirmPassword}</p>
-                    )}
-                  </div>
-                )}
+                <AnimatePresence mode="wait">
+                  {!isLogin && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <Label htmlFor="confirmPassword" className="text-purple-200">Confirmar contraseña</Label>
+                      <div className="relative">
+                        <Input
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500 pr-10"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300"
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-red-400 mt-1">{errors.confirmPassword}</p>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <Button
                   type="submit"

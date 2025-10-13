@@ -6,8 +6,7 @@ import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 import { 
   LayoutDashboard, User, Award, Star, GitBranch, Settings, 
-  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight,
-  Flame, Trophy
+  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -63,7 +62,7 @@ const Logo = () => {
 
 const SidebarContent = ({ onLinkClick }) => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { logout } = useAuth(); // 🔧 CORREGIDO: logout en vez de signOut
   const { stats } = useData();
   const { toast } = useToast();
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -78,7 +77,7 @@ const SidebarContent = ({ onLinkClick }) => {
 
   const handleLogout = async () => {
     if (onLinkClick) onLinkClick();
-    await signOut();
+    logout(); // 🔧 CORREGIDO: logout en vez de signOut
     toast({
       title: "¡Hasta pronto!",
       description: "Energiko te esperará para continuar tu viaje 🐼"
@@ -130,8 +129,6 @@ const SidebarContent = ({ onLinkClick }) => {
       emoji: '👤'
     },
   ];
-  
-  const PandoCoins = stats ? (stats.level * 100) + (stats.streak * 20) + (stats.achievements_unlocked * 50) : 0;
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-slate-900 via-purple-900/95 to-indigo-950">
@@ -236,43 +233,8 @@ const SidebarContent = ({ onLinkClick }) => {
         ))}
       </nav>
 
-      {/* Footer con PandoCoins animadas */}
+      {/* Footer - SIN PandoCoins */}
       <div className="p-3 space-y-2 border-t border-purple-500/30">
-        <motion.div 
-          className="relative overflow-hidden rounded-xl bg-gradient-to-r from-yellow-500/20 via-amber-500/20 to-yellow-500/20 p-3"
-          whileHover={{ scale: 1.02 }}
-        >
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent"
-            animate={{
-              x: [-200, 200],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-            }}
-          />
-          <div className="relative flex items-center justify-center gap-2">
-            <motion.span 
-              className="text-2xl"
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              🐼
-            </motion.span>
-            <span className="text-yellow-400 font-bold">©</span>
-            <motion.span 
-              className="text-white font-bold text-lg"
-              key={PandoCoins}
-              initial={{ scale: 1.5, color: "#fbbf24" }}
-              animate={{ scale: 1, color: "#ffffff" }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              {PandoCoins}
-            </motion.span>
-          </div>
-        </motion.div>
-        
         <Button 
           variant="ghost" 
           onClick={() => navigate('/settings')} 

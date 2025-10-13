@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { HelmetProvider } from 'react-helmet-async'; // ✅ Cambiar a async
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { DataProvider } from '@/contexts/DataContext';
@@ -25,7 +25,7 @@ import AchievementsPage from '@/pages/AchievementsPage';
 import ProgressMapPage from '@/pages/ProgressMapPage';
 import LevelsPage from '@/pages/LevelsPage';
 
-// Componente PrivateRoute
+// ✅ Componente PrivateRoute
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
@@ -40,7 +40,7 @@ const PrivateRoute = ({ children }) => {
   return user ? children : <Navigate to="/auth" />;
 };
 
-// Componente interno que usa los hooks
+// ✅ Componente interno que usa los hooks
 const AppRoutes = () => {
   return (
     <Routes>
@@ -75,15 +75,17 @@ function App() {
   const backend = isMobile ? TouchBackend : HTML5Backend;
 
   return (
-    <>
-      <Helmet>
-        <title>ConnectONE - Transforma tu vida</title>
-        <meta name="description" content="Gamifica tu bienestar con ConnectONE" />
-      </Helmet>
-      
+    // ✅ Usar HelmetProvider en vez de solo Helmet
+    <HelmetProvider>
       <AuthProvider>
         <DndProvider backend={backend} options={{ enableMouseEvents: true }}>
-          <Router>
+          {/* ✅ Router con future flags para evitar warnings */}
+          <Router 
+            future={{ 
+              v7_startTransition: true,
+              v7_relativeSplatPath: true 
+            }}
+          >
             <DataProvider>
               <div className="min-h-screen bg-background text-foreground">
                 <AppRoutes />
@@ -93,7 +95,7 @@ function App() {
           </Router>
         </DndProvider>
       </AuthProvider>
-    </>
+    </HelmetProvider>
   );
 }
 

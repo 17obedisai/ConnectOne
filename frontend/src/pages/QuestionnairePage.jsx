@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -15,6 +15,8 @@ import {
   Activity, Coffee, Moon, Sun
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import axios from 'axios';
+import { useAuth } from '@/contexts/AuthContext';
 
 const QuestionnairePage = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -23,6 +25,7 @@ const QuestionnairePage = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { updateQuestionnaireStatus } = useAuth();
 
   // Partículas flotantes
   const floatingElements = Array.from({ length: 15 }, (_, i) => ({
@@ -298,25 +301,45 @@ const QuestionnairePage = () => {
     setIsLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
       const profileData = {
         questionnaire_completed: true,
         ...answers,
         completedAt: new Date().toISOString()
       };
       
-      // Guardar en localStorage
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user && user.id) {
-        localStorage.setItem(`profile_${user.id}`, JSON.stringify(profileData));
-      } else {
-        localStorage.setItem('profile_temp', JSON.stringify(profileData));
-      }
+      console.log('📤 Enviando cuestionario al backend:', profileData);
+      
+      // Enviar al backend
+      const response = await axios.post(
+        `${API_URL}/api/questionnaire/submit`,
+        profileData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log('✅ Cuestionario guardado en backend:', response.data);
+      
+      // Actualizar el estado del usuario en AuthContext
+      updateQuestionnaireStatus(true);
+      
+      // También guardar en localStorage como backup
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      user.questionnaire_completed = true;
+      localStorage.setItem('user', JSON.stringify(user));
       
       // Celebración
       confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 }
+        particleCount: 200,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#9333EA', '#EC4899', '#10B981', '#F59E0B']
       });
       
       toast({
@@ -329,9 +352,10 @@ const QuestionnairePage = () => {
       }, 1500);
       
     } catch (error) {
+      console.error('❌ Error guardando cuestionario:', error);
       toast({
         title: "Error",
-        description: "Algo salió mal. Intenta de nuevo.",
+        description: error.response?.data?.mensaje || "Algo salió mal. Intenta de nuevo.",
         variant: "destructive"
       });
     } finally {
@@ -620,7 +644,10 @@ const QuestionnairePage = () => {
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
                   >
                     {isLoading ? (
-                      'Guardando...'
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Guardando...
+                      </div>
                     ) : currentQuestion === questions.length - 1 ? (
                       <>
                         Comenzar Aventura
