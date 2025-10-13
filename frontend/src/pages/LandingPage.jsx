@@ -228,36 +228,40 @@ const LandingPage = () => {
   // Equipo del SENA
   const equipo = [
     {
-      nombre: 'Estudiante 1',
-      rol: 'Full Stack Developer',
+      nombre: 'Obed Rodriguez',
+      rol: 'Líder de Proyecto / Full Stack Developer / UI',
       avatar: '👨‍💻',
-      skills: ['React', 'Node.js', 'MongoDB'],
+      skills: ['React', 'Node.js', 'MongoDB', 'UI Design'],
       linkedin: '#',
-      github: '#'
+      github: 'https://github.com/17obedisai',
+      showGithub: true
     },
     {
-      nombre: 'Estudiante 2',
-      rol: 'UI/UX Designer',
-      avatar: '👩‍🎨',
-      skills: ['Figma', 'CSS', 'Animaciones'],
+      nombre: 'Jesus Mendez',
+      rol: 'UX / Documentación / Publicidad',
+      avatar: '👨‍🎓',
+      skills: ['UX Design', 'Documentación', 'Marketing'],
       linkedin: '#',
-      github: '#'
+      github: '#',
+      showGithub: false
     },
     {
-      nombre: 'Estudiante 3',
-      rol: 'Backend Developer',
-      avatar: '👨‍🔧',
-      skills: ['Python', 'APIs', 'Databases'],
-      linkedin: '#',
-      github: '#'
-    },
-    {
-      nombre: 'Estudiante 4',
-      rol: 'Project Manager',
+      nombre: 'Lorena Causaya',
+      rol: 'Documentación / Base de Datos',
       avatar: '👩‍💼',
-      skills: ['Scrum', 'Testing', 'Documentación'],
+      skills: ['Documentación', 'Databases', 'SQL'],
       linkedin: '#',
-      github: '#'
+      github: '#',
+      showGithub: false
+    },
+    {
+      nombre: 'Esteban Leal',
+      rol: 'Ilustración / Marketing',
+      avatar: '👨‍🎨',
+      skills: ['Diseño Gráfico', 'Marketing', 'Branding'],
+      linkedin: '#',
+      github: '#',
+      showGithub: false
     }
   ];
 

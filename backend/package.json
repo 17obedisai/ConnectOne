@@ -27,6 +27,7 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "axios": "^1.12.2",
     "nodemon": "^3.1.10"
   }
 }
