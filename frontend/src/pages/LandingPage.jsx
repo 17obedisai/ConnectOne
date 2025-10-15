@@ -227,43 +227,38 @@ const LandingPage = () => {
 
   // Equipo del SENA
   const equipo = [
-    {
-      nombre: 'Obed Rodriguez',
-      rol: 'Líder de Proyecto / Full Stack Developer / UI',
-      avatar: '👨‍💻',
-      skills: ['React', 'Node.js', 'MongoDB', 'UI Design'],
-      linkedin: '#',
-      github: 'https://github.com/17obedisai',
-      showGithub: true
-    },
-    {
-      nombre: 'Jesus Mendez',
-      rol: 'UX / Documentación / Publicidad',
-      avatar: '👨‍🎓',
-      skills: ['UX Design', 'Documentación', 'Marketing'],
-      linkedin: '#',
-      github: '#',
-      showGithub: false
-    },
-    {
-      nombre: 'Lorena Causaya',
-      rol: 'Documentación / Base de Datos',
-      avatar: '👩‍💼',
-      skills: ['Documentación', 'Databases', 'SQL'],
-      linkedin: '#',
-      github: '#',
-      showGithub: false
-    },
-    {
-      nombre: 'Esteban Leal',
-      rol: 'Ilustración / Marketing',
-      avatar: '👨‍🎨',
-      skills: ['Diseño Gráfico', 'Marketing', 'Branding'],
-      linkedin: '#',
-      github: '#',
-      showGithub: false
-    }
-  ];
+  {
+    nombre: 'Obed Rodriguez',
+    rol: 'Líder de Proyecto / Full Stack Developer / UI',
+    avatar: '👨‍💻',
+    skills: ['React', 'Node.js', 'MongoDB', 'UI Design'],
+    github: 'https://github.com/17obedisai',
+    showGithub: true
+  },
+  {
+    nombre: 'Jesus Mendez',
+    rol: 'UX / Documentación / Publicidad',
+    avatar: '👨‍🎓',
+    skills: ['UX Design', 'Documentación', 'Marketing'],
+    github: 'https://github.com/davidm2024',
+    showGithub: true
+  },
+  {
+    nombre: 'Lorena Causaya',
+    rol: 'Documentación / Base de Datos',
+    avatar: '👩‍💼',
+    skills: ['Documentación', 'Databases', 'SQL'],
+    github: 'https://github.com/lore-cv0',
+    showGithub: true
+  },
+  {
+    nombre: 'Esteban Leal',
+    rol: 'Ilustración / Marketing',
+    avatar: '👨‍🎨',
+    skills: ['Diseño Gráfico', 'Marketing', 'Branding'],
+    showGithub: false
+  }
+];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
@@ -839,12 +834,16 @@ const LandingPage = () => {
                     </div>
                     
                     <div className="flex gap-2 justify-center">
-                      <Button size="sm" variant="ghost" className="text-white">
-                        <Linkedin className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-white">
-                        <Github className="w-4 h-4" />
-                      </Button>
+                      {miembro.showGithub && (
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-white hover:text-purple-400"
+                          onClick={() => window.open(miembro.github, '_blank')}
+                        >
+                          <Github className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -861,7 +860,7 @@ const LandingPage = () => {
             <div className="text-center">
               <div className="text-6xl mb-4">🎓</div>
               <h3 className="text-2xl font-bold text-white mb-4">
-                Institución: SENA - Centro de Formación
+                Institución: SENA Centro Agroempresarial y Desarrollo Pecuario del Huila
               </h3>
               <p className="text-purple-200 mb-6 max-w-3xl mx-auto">
                 Este proyecto representa la culminación de nuestro tecnólogo en Análisis y Desarrollo de Software. 
@@ -1020,20 +1019,6 @@ const LandingPage = () => {
               <p className="text-purple-200 text-sm">
                 Tu compañero de bienestar personal gamificado.
               </p>
-              <div className="flex gap-3 mt-4">
-                <Button size="sm" variant="ghost" className="text-purple-400">
-                  <Instagram className="w-5 h-5" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-purple-400">
-                  <Twitter className="w-5 h-5" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-purple-400">
-                  <Linkedin className="w-5 h-5" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-purple-400">
-                  <Github className="w-5 h-5" />
-                </Button>
-              </div>
             </div>
             
             <div>
@@ -1056,20 +1041,16 @@ const LandingPage = () => {
               </ul>
             </div>
             
-            <div>
+                      <div>
               <h4 className="text-white font-bold mb-4">Contacto</h4>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-purple-200">
                   <Mail className="w-4 h-4" />
-                  <span className="text-sm">info@connectone.com</span>
+                  <span className="text-sm">contacto@connectone.space</span>
                 </div>
                 <div className="flex items-center gap-2 text-purple-200">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm">SENA, Colombia</span>
-                </div>
-                <div className="flex items-center gap-2 text-purple-200">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="text-sm">Chat en vivo</span>
+                  <span className="text-sm">Garzón - Huila</span>
                 </div>
               </div>
             </div>
@@ -1078,7 +1059,7 @@ const LandingPage = () => {
           <div className="border-t border-purple-500/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-purple-200 text-sm">
-                © 2024 ConnectONE - Proyecto de Grado SENA. Todos los derechos reservados.
+                © 2025 ConnectONE - Proyecto de Grado SENA. Todos los derechos reservados.
               </p>
               <div className="flex items-center gap-2">
                 <Badge className="bg-green-600 text-white">
