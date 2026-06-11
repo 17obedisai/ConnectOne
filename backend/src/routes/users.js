@@ -6,7 +6,7 @@ const User = require('../models/User');
 // Obtener perfil del usuario actual
 router.get('/profile', auth, async (req, res) => {
     try {
-        const usuario = await User.findById(req.userId).select('-password');
+        const usuario = await User.findById(req.user.id).select('-password');
         res.json(usuario);
     } catch (error) {
         console.error(error);
@@ -20,7 +20,7 @@ router.get('/profile', auth, async (req, res) => {
         const { objetivos, intereses, nivelActividad, tiempoDisponible } = req.body;
         
         const usuario = await User.findByIdAndUpdate(
-        req.userId,
+        req.user.id,
         {
             perfilInicial: {
             objetivos,
@@ -43,7 +43,7 @@ router.get('/profile', auth, async (req, res) => {
     router.put('/level-up', auth, async (req, res) => {
     try {
     const { experiencia } = req.body;
-    const usuario = await User.findById(req.userId);
+    const usuario = await User.findById(req.user.id);
     
     usuario.experiencia += experiencia;
     

@@ -14,8 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
-import axios from 'axios';
-import { 
+import {
   ArrowLeft, User, Bell, Shield, Save, Moon, Sun, Volume2,
   Clock, Calendar, Smartphone, Mail, Lock, Trash2, Download,
   AlertCircle, Camera, Heart, Brain, Activity, Target,
