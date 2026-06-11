@@ -59,7 +59,8 @@ router.post('/login', validate(loginSchema), async (req, res) => {
     const { email, password } = req.body;
 
     // Aquí sí se requiere el hash para verificar la contraseña; nunca se devuelve al cliente.
-    const usuario = await User.findOne({ email });
+    // El password tiene select:false en el esquema, por eso se fuerza con .select('+password').
+    const usuario = await User.findOne({ email }).select('+password');
     if (!usuario) {
       return res.status(400).json({ success: false, message: 'Credenciales inválidas' });
     }
