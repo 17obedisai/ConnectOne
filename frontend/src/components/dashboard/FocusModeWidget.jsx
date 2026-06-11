@@ -94,7 +94,7 @@ const FocusModeWidget = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': localStorage.getItem('token')
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ duration: 25 })
       });
