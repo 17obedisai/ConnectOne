@@ -72,6 +72,7 @@ app.use('/api/', apiLimiter);
 // 4. RUTAS — ÚNICA FUENTE DE VERDAD: backend/src/routes/
 // ─────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/questionnaire', require('./src/routes/questionnaire'));
 app.use('/api/users', require('./src/routes/users'));
 app.use('/api/missions', require('./src/routes/missions'));
 app.use('/api/achievements', require('./src/routes/achievements'));

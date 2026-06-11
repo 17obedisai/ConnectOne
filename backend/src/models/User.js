@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema({
         descripcion: String,
         fechaObtenido: Date
     }],
+    questionnaire_completed: {
+        type: Boolean,
+        default: false
+    },
     fechaRegistro: {
         type: Date,
         default: Date.now

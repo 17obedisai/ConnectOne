@@ -15,7 +15,7 @@ import {
   Activity, Coffee, Moon, Sun
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import axios from 'axios';
+import api from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 const QuestionnairePage = () => {
@@ -301,30 +301,12 @@ const QuestionnairePage = () => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      
       const profileData = {
-        questionnaire_completed: true,
         ...answers,
         completedAt: new Date().toISOString()
       };
-      
-      console.log('📤 Enviando cuestionario al backend:', profileData);
-      
-      // Enviar al backend
-      const response = await axios.post(
-        `${API_URL}/api/questionnaire/submit`,
-        profileData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      console.log('✅ Cuestionario guardado en backend:', response.data);
+
+      await api.post('/questionnaire/submit', profileData);
       
       // Actualizar el estado del usuario en AuthContext
       updateQuestionnaireStatus(true);
@@ -355,7 +337,7 @@ const QuestionnairePage = () => {
       console.error('❌ Error guardando cuestionario:', error);
       toast({
         title: "Error",
-        description: error.response?.data?.mensaje || "Algo salió mal. Intenta de nuevo.",
+        description: error.response?.data?.message || "Algo salió mal. Intenta de nuevo.",
         variant: "destructive"
       });
     } finally {

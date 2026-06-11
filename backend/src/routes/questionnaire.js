@@ -4,64 +4,58 @@ const auth = require('../middleware/auth');
 const Questionnaire = require('../models/Questionnaire');
 const User = require('../models/User');
 
-// Guardar respuestas del cuestionario
+// POST /submit — guarda las respuestas y marca al usuario como completado
 router.post('/submit', auth, async (req, res) => {
   try {
-    const { objetivos, nivelActividad, tiempoDisponible, preferencias } = req.body;
-    
-    // Buscar si ya existe un cuestionario
-    let questionnaire = await Questionnaire.findOne({ userId: req.userId });
-    
+    const { feeling, main_goal, challenges, activity_level, nutrition_rating, advanced_options, completedAt } = req.body;
+    const userId = req.user.id;
+
+    let questionnaire = await Questionnaire.findOne({ userId });
+
+    const questionnaireData = {
+      feeling,
+      main_goal,
+      challenges: challenges || [],
+      activity_level,
+      nutrition_rating,
+      advanced_options: advanced_options || [],
+      completado: true,
+      fechaCompletado: completedAt ? new Date(completedAt) : new Date()
+    };
+
     if (questionnaire) {
-      // Actualizar existente
-      questionnaire.objetivos = objetivos;
-      questionnaire.nivelActividad = nivelActividad;
-      questionnaire.tiempoDisponible = tiempoDisponible;
-      questionnaire.preferencias = preferencias;
-      questionnaire.completado = true;
-      questionnaire.fechaCompletado = new Date();
+      Object.assign(questionnaire, questionnaireData);
     } else {
-      // Crear nuevo
-      questionnaire = new Questionnaire({
-        userId: req.userId,
-        objetivos,
-        nivelActividad,
-        tiempoDisponible,
-        preferencias,
-        completado: true,
-        fechaCompletado: new Date()
-      });
+      questionnaire = new Questionnaire({ userId, ...questionnaireData });
     }
-    
+
     await questionnaire.save();
-    
-    // Actualizar el perfil inicial del usuario
-    await User.findByIdAndUpdate(req.userId, {
+
+    // Marcar usuario como completado y actualizar su perfil inicial
+    await User.findByIdAndUpdate(userId, {
+      questionnaire_completed: true,
       perfilInicial: {
-        objetivos,
-        nivelActividad,
-        tiempoDisponible
+        objetivos: main_goal ? [main_goal] : [],
+        nivelActividad: activity_level || '',
+        tiempoDisponible: ''
       }
     });
-    
-    res.json({ 
-      mensaje: 'Cuestionario guardado exitosamente',
-      cuestionario: questionnaire 
-    });
+
+    res.json({ success: true, message: 'Cuestionario guardado exitosamente' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: 'Error guardando cuestionario' });
+    res.status(500).json({ success: false, message: 'Error guardando cuestionario' });
   }
 });
 
-// Obtener cuestionario del usuario
+// GET /my-questionnaire — obtiene el cuestionario del usuario autenticado
 router.get('/my-questionnaire', auth, async (req, res) => {
   try {
-    const questionnaire = await Questionnaire.findOne({ userId: req.userId });
-    res.json(questionnaire || { completado: false });
+    const questionnaire = await Questionnaire.findOne({ userId: req.user.id });
+    res.json({ success: true, data: questionnaire || { completado: false } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ mensaje: 'Error obteniendo cuestionario' });
+    res.status(500).json({ success: false, message: 'Error obteniendo cuestionario' });
   }
 });
 

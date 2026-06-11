@@ -19,7 +19,8 @@ const serializeUser = (user) => ({
   email: user.email,
   nivel: user.nivel,
   experiencia: user.experiencia,
-  racha: user.racha
+  racha: user.racha,
+  questionnaire_completed: user.questionnaire_completed ?? false
 });
 
 // ─────────────────────────────────────────────────────────────
