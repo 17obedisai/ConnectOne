@@ -1,6 +1,6 @@
 // src/lib/dashboardUtils.js
 
-import { transformativeMissions } from './missionsData.js';
+import { transformativeMissions } from '../pages/missionsData.js';
 
 // ============================================
 // SISTEMA DE DESAFÍOS SEMANALES ROTATORIOS
