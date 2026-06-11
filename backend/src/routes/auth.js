@@ -1,90 +1,105 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const { registerSchema, loginSchema } = require('../validators/authSchemas');
 
-// Registro de usuario
-router.post('/register', async (req, res) => {
-    try {
-        const { nombre, email, password } = req.body;
-        
-        // Verificar si el usuario ya existe
-        const usuarioExistente = await User.findOne({ email });
-        if (usuarioExistente) {
-        return res.status(400).json({ mensaje: 'El usuario ya existe' });
-        }
-        
-        // Crear nuevo usuario
-        const nuevoUsuario = new User({
-        nombre,
-        email,
-        password
-        });
-        
-        await nuevoUsuario.save();
-        
-        // Crear token
-        const token = jwt.sign(
-        { userId: nuevoUsuario._id },
-        process.env.JWT_SECRET,
-        { expiresIn: '30d' }
-        );
-        
-        res.status(201).json({
-        token,
-        usuario: {
-            id: nuevoUsuario._id,
-            nombre: nuevoUsuario.nombre,
-            email: nuevoUsuario.email,
-            nivel: nuevoUsuario.nivel
-        }
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ mensaje: 'Error en el servidor' });
+const TOKEN_EXPIRY = '7d';
+
+// Genera un JWT cuyo payload contiene SIEMPRE el id del usuario.
+const signToken = (userId) =>
+  jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
+
+// Serializa un usuario para la respuesta, garantizando que NUNCA se exponga el password.
+const serializeUser = (user) => ({
+  id: user._id,
+  nombre: user.nombre,
+  email: user.email,
+  nivel: user.nivel,
+  experiencia: user.experiencia,
+  racha: user.racha
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /register — datos validados por registerSchema antes de la lógica
+// ─────────────────────────────────────────────────────────────
+router.post('/register', validate(registerSchema), async (req, res) => {
+  try {
+    const { nombre, email, password } = req.body;
+
+    // Comprobación de existencia sin traer el hash de password.
+    const usuarioExistente = await User.findOne({ email }).select('_id');
+    if (usuarioExistente) {
+      return res.status(400).json({ success: false, message: 'El usuario ya existe' });
     }
+
+    // El hash de password lo realiza el hook pre-save del modelo.
+    const nuevoUsuario = await User.create({ nombre, email, password });
+
+    const token = signToken(nuevoUsuario._id);
+
+    res.status(201).json({
+      success: true,
+      token,
+      data: { user: serializeUser(nuevoUsuario) }
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
 
-    // Login de usuario
-    router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        // Buscar usuario
-        const usuario = await User.findOne({ email });
-        if (!usuario) {
-        return res.status(400).json({ mensaje: 'Credenciales inválidas' });
-        }
-        
-        // Verificar contraseña
-        const passwordValido = await usuario.verificarPassword(password);
-        if (!passwordValido) {
-        return res.status(400).json({ mensaje: 'Credenciales inválidas' });
-        }
-        
-        // Crear token
-        const token = jwt.sign(
-        { userId: usuario._id },
-        process.env.JWT_SECRET,
-        { expiresIn: '30d' }
-        );
-        
-        res.json({
-        token,
-        usuario: {
-            id: usuario._id,
-            nombre: usuario.nombre,
-            email: usuario.email,
-            nivel: usuario.nivel,
-            experiencia: usuario.experiencia,
-            racha: usuario.racha
-        }
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ mensaje: 'Error en el servidor' });
+// ─────────────────────────────────────────────────────────────
+// POST /login — datos validados por loginSchema antes de la lógica
+// ─────────────────────────────────────────────────────────────
+router.post('/login', validate(loginSchema), async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Aquí sí se requiere el hash para verificar la contraseña; nunca se devuelve al cliente.
+    const usuario = await User.findOne({ email });
+    if (!usuario) {
+      return res.status(400).json({ success: false, message: 'Credenciales inválidas' });
     }
+
+    const passwordValido = await usuario.verificarPassword(password);
+    if (!passwordValido) {
+      return res.status(400).json({ success: false, message: 'Credenciales inválidas' });
+    }
+
+    const token = signToken(usuario._id);
+
+    res.json({
+      success: true,
+      token,
+      data: { user: serializeUser(usuario) }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// GET /me — identidad tomada del JWT (req.user.id), NUNCA del body
+// ─────────────────────────────────────────────────────────────
+router.get('/me', auth, async (req, res) => {
+  try {
+    const usuario = await User.findById(req.user.id).select('-password');
+    if (!usuario) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      data: { user: serializeUser(usuario) }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
 });
 
 module.exports = router;
