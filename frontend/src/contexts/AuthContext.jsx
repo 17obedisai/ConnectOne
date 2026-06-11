@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/services/api';
 
 // Crear el contexto
 const AuthContext = createContext();
@@ -13,174 +13,134 @@ export const useAuth = () => {
   return context;
 };
 
+// Extrae mensaje + errores por campo (Zod) de una respuesta de error de la API.
+const parseApiError = (error, fallback) => {
+  const data = error.response?.data;
+  const fieldErrors = {};
+
+  if (data && Array.isArray(data.errors)) {
+    data.errors.forEach((issue) => {
+      if (issue.field) fieldErrors[issue.field] = issue.message;
+    });
+  }
+
+  return {
+    message: data?.message || fallback,
+    fieldErrors
+  };
+};
+
 // Provider del contexto
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // URL de la API
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // Limpia toda la sesión local.
+  const clearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
-  // Verificar autenticación al cargar la app
+  // Verificar autenticación al montar: si hay token, se valida contra /me.
   useEffect(() => {
     checkAuth();
+
+    // El interceptor de api.js emite este evento ante un 401.
+    const handleUnauthorized = () => {
+      clearSession();
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
-  // Función para verificar si el usuario está autenticado
+  // Hidrata el estado del usuario validando el token silenciosamente contra el backend.
   const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      
-      if (token && userStr) {
-        const userData = JSON.parse(userStr);
-        
-        // Verificar el token con el backend
-        const response = await axios.get(`${API_URL}/api/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.data.success) {
-          setUser(response.data.data);
-        } else {
-          // Token inválido, limpiar
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-        }
-      }
-    } catch (error) {
-      console.error('Error verificando autenticación:', error);
-      // Si el token es inválido, limpiar
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    const token = localStorage.getItem('token');
+
+    if (!token) {
       setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.get('/auth/me');
+      const currentUser = response.data?.data?.user;
+
+      if (response.data?.success && currentUser) {
+        setUser(currentUser);
+        localStorage.setItem('user', JSON.stringify(currentUser));
+      } else {
+        clearSession();
+      }
+    } catch (err) {
+      // Token inválido/expirado: el interceptor ya limpió; aseguramos el estado.
+      clearSession();
     } finally {
       setLoading(false);
     }
   };
 
-  // Función de login
+  // Login contra el backend real.
   const login = async (credentials) => {
+    setError(null);
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/login`,
-        credentials,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await api.post('/auth/login', credentials);
+      const { token, data } = response.data;
 
-      if (response.data.success) {
-        const { token, data } = response.data;
-        
-        // Guardar token y usuario
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        // Configurar axios para futuras peticiones
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Actualizar estado
-        setUser(data.user);
-        
-        return {
-          success: true,
-          user: data.user,
-          hasCompletedQuestionnaire: data.user?.questionnaire_completed || false
-        };
-      } else {
-        return {
-          success: false,
-          error: response.data.mensaje || 'Error al iniciar sesión'
-        };
-      }
-    } catch (error) {
-      console.error('Error en login:', error);
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+
       return {
-        success: false,
-        error: error.response?.data?.mensaje || 'Error de conexión con el servidor'
+        success: true,
+        user: data.user,
+        hasCompletedQuestionnaire: data.user?.questionnaire_completed || false
       };
+    } catch (err) {
+      const { message, fieldErrors } = parseApiError(err, 'Error al iniciar sesión');
+      setError(message);
+      return { success: false, error: message, fieldErrors };
     }
   };
 
-  // Función de registro
+  // Registro contra el backend real.
   const register = async (userData) => {
+    setError(null);
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/register`,
-        userData,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await api.post('/auth/register', userData);
+      const { token, data } = response.data;
 
-      if (response.data.success) {
-        const { token, data } = response.data;
-        
-        // Guardar token y usuario
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        
-        // Configurar axios para futuras peticiones
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Actualizar estado
-        setUser(data.user);
-        
-        return {
-          success: true,
-          user: data.user,
-          isNewUser: true // Siempre es nuevo usuario en registro
-        };
-      } else {
-        return {
-          success: false,
-          error: response.data.mensaje || 'Error al registrarse'
-        };
-      }
-    } catch (error) {
-      console.error('Error en registro:', error);
-      return {
-        success: false,
-        error: error.response?.data?.mensaje || 'Error de conexión con el servidor'
-      };
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+
+      return { success: true, user: data.user, isNewUser: true };
+    } catch (err) {
+      const { message, fieldErrors } = parseApiError(err, 'Error al registrarse');
+      setError(message);
+      return { success: false, error: message, fieldErrors };
     }
   };
 
-  // Función de logout
+  // Logout: limpia sesión local (el header lo gestiona el interceptor).
   const logout = () => {
-    // Limpiar localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // Limpiar header de axios
-    delete axios.defaults.headers.common['Authorization'];
-    
-    // Actualizar estado
-    setUser(null);
+    clearSession();
+    setError(null);
   };
 
-  // Función para actualizar el estado del cuestionario
+  // Actualiza el estado del cuestionario en el usuario local.
   const updateQuestionnaireStatus = (completed) => {
     if (user) {
-      const updatedUser = { 
-        ...user, 
-        questionnaire_completed: completed 
-      };
-      
+      const updatedUser = { ...user, questionnaire_completed: completed };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
-  // Función para actualizar datos del usuario
+  // Actualiza datos del usuario local.
   const updateUser = (updates) => {
     if (user) {
       const updatedUser = { ...user, ...updates };
@@ -189,10 +149,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Valor del contexto
   const value = {
     user,
     loading,
+    error,
     login,
     register,
     logout,
@@ -202,11 +162,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Exportación por defecto del Provider

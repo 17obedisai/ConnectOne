@@ -108,7 +108,8 @@ const AuthPage = () => {
             navigate('/questionnaire');
           }
         } else {
-          setErrors({ general: result.error });
+          // Fusiona el mensaje general y los errores por campo (Zod) de la API.
+          setErrors({ general: result.error, ...(result.fieldErrors || {}) });
           toast({
             title: "Error",
             description: result.error,
@@ -138,7 +139,8 @@ const AuthPage = () => {
           // Nuevo usuario SIEMPRE va al cuestionario
           navigate('/questionnaire');
         } else {
-          setErrors({ general: result.error });
+          // Fusiona el mensaje general y los errores por campo (Zod) de la API.
+          setErrors({ general: result.error, ...(result.fieldErrors || {}) });
           toast({
             title: "Error",
             description: result.error,
