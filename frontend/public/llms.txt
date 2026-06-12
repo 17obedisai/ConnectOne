@@ -10,3 +10,4 @@
 - [Mapa de Progreso - ConnectONE](/progress): Visualiza tu viaje de transformación personal
 - [Mi Perfil - ConnectONE](/profile): No description available
 - [Misiones - ConnectONE](/mission): No description available
+- [Personaliza tu Aventura - ConnectONE](/questionnaire): No description available
