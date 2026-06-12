@@ -33,7 +33,7 @@ router.post('/register', validate(registerSchema), async (req, res) => {
     // Comprobación de existencia sin traer el hash de password.
     const usuarioExistente = await User.findOne({ email }).select('_id');
     if (usuarioExistente) {
-      return res.status(400).json({ success: false, message: 'El usuario ya existe' });
+      return res.status(400).json({ success: false, message: 'Este correo ya está registrado' });
     }
 
     // El hash de password lo realiza el hook pre-save del modelo.

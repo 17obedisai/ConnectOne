@@ -13,6 +13,7 @@ const questionnaireSchema = new mongoose.Schema({
   activity_level: String,
   nutrition_rating: String,
   advanced_options: [String],
+  interests: [String],
   completado: {
     type: Boolean,
     default: false

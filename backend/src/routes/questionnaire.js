@@ -7,7 +7,7 @@ const User = require('../models/User');
 // POST /submit — guarda las respuestas y marca al usuario como completado
 router.post('/submit', auth, async (req, res) => {
   try {
-    const { feeling, main_goal, challenges, activity_level, nutrition_rating, advanced_options, completedAt } = req.body;
+    const { feeling, main_goal, challenges, activity_level, nutrition_rating, interests, advanced_options, completedAt } = req.body;
     const userId = req.user.id;
 
     let questionnaire = await Questionnaire.findOne({ userId });
@@ -18,6 +18,7 @@ router.post('/submit', auth, async (req, res) => {
       challenges: challenges || [],
       activity_level,
       nutrition_rating,
+      interests: interests || [],
       advanced_options: advanced_options || [],
       completado: true,
       fechaCompletado: completedAt ? new Date(completedAt) : new Date()
@@ -36,6 +37,7 @@ router.post('/submit', auth, async (req, res) => {
       questionnaire_completed: true,
       perfilInicial: {
         objetivos: main_goal ? [main_goal] : [],
+        intereses: interests || [],
         nivelActividad: activity_level || '',
         tiempoDisponible: ''
       }
