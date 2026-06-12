@@ -1,0 +1,71 @@
+/* ─────────────────────────────────────────
+   Animaciones nativas CSS — Landing Page
+   Sin Tailwind. Solo @keyframes puro.
+───────────────────────────────────────── */
+
+@keyframes flotar {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-22px);
+  }
+}
+
+@keyframes flotarRotar {
+  0% {
+    transform: translateY(0px) rotate(-4deg);
+  }
+  25% {
+    transform: translateY(-12px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-22px) rotate(4deg);
+  }
+  75% {
+    transform: translateY(-12px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(-4deg);
+  }
+}
+
+@keyframes respirar {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes pulsarBrillo {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(236, 72, 153, 0.8));
+  }
+}
+
+/* Mascota principal en el Hero */
+.mascotaHero {
+  animation:
+    flotarRotar 4s ease-in-out infinite,
+    pulsarBrillo 4s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+/* Panda en la sección CTA final */
+.pandaCTA {
+  animation:
+    flotar 4s ease-in-out infinite,
+    pulsarBrillo 5s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+/* Imagen genérica que deba "respirar" */
+.imagenRespira {
+  animation: respirar 3s ease-in-out infinite;
+  will-change: transform;
+}

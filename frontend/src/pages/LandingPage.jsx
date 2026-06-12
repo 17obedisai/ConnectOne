@@ -4,15 +4,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Star, Sparkles, Target, Heart, Brain, Dumbbell, Users, Moon, Book,
-  ChevronRight, CheckCircle, Trophy, Zap, Shield, Award, Gift,
-  ArrowRight, Calendar, Clock, BarChart, TrendingUp, Activity,
-  Menu, X, Play, Pause, Volume2, VolumeX, Mail, Phone, MapPin,
-  Github, Linkedin, Instagram, Twitter, Send, MessageCircle,
-  Flame, Coffee, Sun, CloudRain, Wind, Sunrise
+import {
+  Star, Sparkles, Brain, Users,
+  ChevronRight, CheckCircle, Trophy, Shield,
+  Activity, Mail, MapPin
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import styles from './LandingPage.module.css';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -225,40 +223,6 @@ const LandingPage = () => {
     }
   ];
 
-  // Equipo del SENA
-  const equipo = [
-  {
-    nombre: 'Obed Rodriguez',
-    rol: 'Líder de Proyecto / Full Stack Developer / UI',
-    avatar: '👨‍💻',
-    skills: ['React', 'Node.js', 'MongoDB', 'UI Design'],
-    github: 'https://github.com/17obedisai',
-    showGithub: true
-  },
-  {
-    nombre: 'Jesus Mendez',
-    rol: 'UX / Documentación / Publicidad',
-    avatar: '👨‍🎓',
-    skills: ['UX Design', 'Documentación', 'Marketing'],
-    github: 'https://github.com/davidm2024',
-    showGithub: true
-  },
-  {
-    nombre: 'Lorena Causaya',
-    rol: 'Documentación / Base de Datos',
-    avatar: '👩‍💼',
-    skills: ['Documentación', 'Databases', 'SQL'],
-    github: 'https://github.com/lore-cv0',
-    showGithub: true
-  },
-  {
-    nombre: 'Esteban Leal',
-    rol: 'Ilustración / Marketing',
-    avatar: '👨‍🎨',
-    skills: ['Diseño Gráfico', 'Marketing', 'Branding'],
-    showGithub: false
-  }
-];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
@@ -315,20 +279,11 @@ const LandingPage = () => {
           }}
         />
         
-        {/* Imagen principal - MÁS GRANDE y por encima del gradiente */}
-        <motion.img
+        {/* Imagen principal — animación CSS nativa */}
+        <img
           src="/images/panda-level-7.png"
           alt="Energiko"
-          className="w-64 h-64 md:w-80 md:h-80 mx-auto object-contain relative z-10"
-          animate={{ 
-            y: [0, -20, 0],
-            rotate: [-5, 5, -5]
-          }}
-          transition={{ 
-            duration: 4, 
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          className={`w-64 h-64 md:w-80 md:h-80 mx-auto object-contain relative z-10 ${styles.mascotaHero}`}
         />
       </div>
     </motion.div>
@@ -390,15 +345,13 @@ const LandingPage = () => {
           </motion.div>
 
           {/* Estadísticas animadas */}
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
+          <motion.div
+            className="grid grid-cols-2 gap-6 mt-20 max-w-md mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
             {[
-              { number: '10K+', label: 'Usuarios Activos', icon: <Users className="w-5 h-5" /> },
-              { number: '100+', label: 'Misiones Únicas', icon: <Target className="w-5 h-5" /> },
               { number: '16', label: 'Niveles Épicos', icon: <Trophy className="w-5 h-5" /> },
               { number: '95%', label: 'Satisfacción', icon: <Star className="w-5 h-5" /> }
             ].map((stat, index) => (
@@ -787,104 +740,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* SECCIÓN SOBRE NOSOTROS - SENA */}
-      <section id="nosotros" className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              El Equipo detrás de 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-400"> la Magia</span>
-            </h2>
-            <p className="text-xl text-purple-200 mb-8">
-              Somos estudiantes del SENA en Análisis y Desarrollo de Software
-            </p>
-            <Badge className="bg-green-600 text-white text-lg px-4 py-2">
-              Proyecto de Grado 2025
-            </Badge>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {equipo.map((miembro, index) => (
-              <motion.div
-                key={miembro.nombre}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -10 }}
-                className="text-center"
-              >
-                <Card className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 border-purple-500/30">
-                  <CardContent className="p-6">
-                    <div className="text-6xl mb-4">{miembro.avatar}</div>
-                    <h3 className="text-xl font-bold text-white mb-1">{miembro.nombre}</h3>
-                    <p className="text-purple-400 mb-4">{miembro.rol}</p>
-                    
-                    <div className="flex flex-wrap gap-1 justify-center mb-4">
-                      {miembro.skills.map(skill => (
-                        <Badge key={skill} className="bg-purple-700 text-xs">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    <div className="flex gap-2 justify-center">
-                      {miembro.showGithub && (
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="text-white hover:text-purple-400"
-                          onClick={() => window.open(miembro.github, '_blank')}
-                        >
-                          <Github className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 rounded-3xl p-8 border border-green-500/30"
-          >
-            <div className="text-center">
-              <div className="text-6xl mb-4">🎓</div>
-              <h3 className="text-2xl font-bold text-white mb-4">
-                Institución: SENA Centro Agroempresarial y Desarrollo Pecuario del Huila
-              </h3>
-              <p className="text-purple-200 mb-6 max-w-3xl mx-auto">
-                Este proyecto representa la culminación de nuestro tecnólogo en Análisis y Desarrollo de Software. 
-                Durante meses hemos trabajado para crear una solución innovadora que combine tecnología, bienestar 
-                y gamificación para mejorar la vida de las personas.
-              </p>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  { label: 'Tecnologías', value: 'React, Node.js, MongoDB, AI' },
-                  { label: 'Metodología', value: 'Scrum, Design Thinking' },
-                  { label: 'Duración', value: '6 meses de desarrollo' }
-                ].map(item => (
-                  <div key={item.label} className="bg-purple-900/30 rounded-lg p-4">
-                    <p className="text-purple-400 text-sm mb-1">{item.label}</p>
-                    <p className="text-white font-bold">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* FAQ EXPANDIDO */}
       <section id="faq" className="py-20 px-4 bg-gradient-to-b from-transparent via-purple-900/20 to-transparent">
         <div className="max-w-4xl mx-auto">
@@ -959,15 +814,10 @@ const LandingPage = () => {
           <Card className="bg-gradient-to-br from-purple-600 to-pink-600 border-0 overflow-hidden relative">
             <div className="absolute inset-0 bg-black/20" />
             <CardContent className="p-12 relative z-10">
-              <motion.img
+              <img
                 src="/images/panda-level-16.png"
                 alt="Panda supremo"
-                className="w-32 h-32 mx-auto mb-6"
-                animate={{ 
-                  y: [0, -20, 0],
-                  rotate: [-5, 5, -5]
-                }}
-                transition={{ duration: 4, repeat: Infinity }}
+                className={`w-32 h-32 mx-auto mb-6 ${styles.pandaCTA}`}
               />
               
               <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -1005,7 +855,7 @@ const LandingPage = () => {
         </motion.div>
       </section>
 
-      {/* FOOTER MEJORADO */}
+      {/* FOOTER */}
       <footer className="bg-slate-900/80 backdrop-blur-xl border-t border-purple-500/20 py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
@@ -1017,55 +867,63 @@ const LandingPage = () => {
                 </span>
               </div>
               <p className="text-purple-200 text-sm">
-                Tu compañero de bienestar personal gamificado.
+                Tu compañero de bienestar personal gamificado. Producto independiente desarrollado con pasión.
               </p>
             </div>
-            
+
             <div>
               <h4 className="text-white font-bold mb-4">Producto</h4>
               <ul className="space-y-2">
                 <li><a href="#caracteristicas" className="text-purple-200 hover:text-purple-400 transition">Características</a></li>
                 <li><a href="#como-funciona" className="text-purple-200 hover:text-purple-400 transition">Cómo Funciona</a></li>
                 <li><a href="#misiones" className="text-purple-200 hover:text-purple-400 transition">Misiones</a></li>
-                <li><span className="text-purple-200">Precios: GRATIS</span></li>
+                <li>
+                  <span className="text-purple-300 text-sm leading-relaxed">
+                    Acceso gratuito por lanzamiento<br />
+                    <span className="text-purple-400/70 text-xs">(Planes premium en el futuro)</span>
+                  </span>
+                </li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-white font-bold mb-4">Soporte</h4>
               <ul className="space-y-2">
                 <li><a href="#faq" className="text-purple-200 hover:text-purple-400 transition">FAQ</a></li>
-                <li><a href="#nosotros" className="text-purple-200 hover:text-purple-400 transition">Sobre Nosotros</a></li>
                 <li><a href="#" className="text-purple-200 hover:text-purple-400 transition">Términos</a></li>
                 <li><a href="#" className="text-purple-200 hover:text-purple-400 transition">Privacidad</a></li>
+                <li>
+                  <span className="text-purple-300 text-sm leading-relaxed">
+                    Acceso gratuito por lanzamiento<br />
+                    <span className="text-purple-400/70 text-xs">(Planes premium en el futuro)</span>
+                  </span>
+                </li>
               </ul>
             </div>
-            
-                      <div>
+
+            <div>
               <h4 className="text-white font-bold mb-4">Contacto</h4>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-purple-200">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-sm">contacto@connectone.space</span>
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span className="text-sm">obedisairodriguezome12@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-2 text-purple-200">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm">Garzón - Huila</span>
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span className="text-sm">Garzón — Huila, Colombia</span>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <div className="border-t border-purple-500/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-purple-200 text-sm">
-                © 2025 ConnectONE - Proyecto de Grado SENA. Todos los derechos reservados.
+                © 2026 ConnectONE — Desarrollado por Obed Rodriguez. Todos los derechos reservados.
               </p>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-green-600 text-white">
-                  Tecnólogo en Análisis y Desarrollo de Software
-                </Badge>
-              </div>
+              <p className="text-purple-400/60 text-xs">
+                Producto independiente · Hecho con ❤️ desde Colombia
+              </p>
             </div>
           </div>
         </div>

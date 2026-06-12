@@ -6,7 +6,7 @@ const auth = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { registerSchema, loginSchema } = require('../validators/authSchemas');
 
-const TOKEN_EXPIRY = '7d';
+const TOKEN_EXPIRY = '30d';
 
 // Genera un JWT cuyo payload contiene SIEMPRE el id del usuario.
 const signToken = (userId) =>
