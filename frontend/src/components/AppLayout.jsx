@@ -6,7 +6,7 @@ import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
   LayoutDashboard, User, Award, Star, GitBranch, Settings,
-  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, BookOpen
+  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, BookOpen, Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -113,6 +113,13 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       text: 'Bitácora',
       color: 'from-teal-500 to-emerald-600',
       emoji: '📓'
+    },
+    {
+      to: '/finanzas',
+      icon: <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />,
+      text: 'Finanzas',
+      color: 'from-emerald-500 to-green-600',
+      emoji: '💰'
     },
     { 
       to: '/map', 
