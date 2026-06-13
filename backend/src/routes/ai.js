@@ -62,4 +62,40 @@ router.post('/assistant', auth, async (req, res) => {
   }
 });
 
+// POST /api/ai/reflect — reflexión breve del coach sobre el cierre de día.
+// body: { aprendizaje, gratitud, concentracion, calidadSueno, nivelEstres }
+router.post('/reflect', auth, async (req, res) => {
+  try {
+    const { aprendizaje, gratitud, concentracion, calidadSueno, nivelEstres } = req.body;
+
+    const usuario = await User.findById(req.user.id).select('nombre');
+
+    const partes = [];
+    if (aprendizaje) partes.push(`Hoy aprendí: ${aprendizaje}`);
+    if (gratitud) partes.push(`Agradezco: ${gratitud}`);
+    if (concentracion) partes.push(`Concentración del día: ${concentracion}/5`);
+    if (calidadSueno) partes.push(`Calidad de sueño: ${calidadSueno}/5`);
+    if (nivelEstres) partes.push(`Nivel de estrés: ${nivelEstres}/5`);
+
+    if (!partes.length) {
+      return res.status(400).json({ success: false, message: 'Completa tu cierre de día primero' });
+    }
+
+    const message =
+      `Este es el cierre de mi día:\n${partes.join('\n')}\n\n` +
+      'Dame una reflexión breve (máx 3 frases): reconoce lo bueno, señala UN patrón a cuidar ' +
+      'y propón UN foco concreto para mañana. Tono cálido pero directo.';
+
+    const result = await generateAssistantReply({
+      message,
+      context: { nombre: usuario?.nombre }
+    });
+
+    res.json({ success: result.ok, configured: result.configured, reflexion: result.text });
+  } catch (error) {
+    console.error('[ai/reflect]', error);
+    res.status(500).json({ success: false, message: 'Error generando la reflexión' });
+  }
+});
+
 module.exports = router;

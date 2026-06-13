@@ -25,6 +25,7 @@ import AchievementsPage from '@/pages/AchievementsPage';
 import ProgressMapPage from '@/pages/ProgressMapPage';
 import LevelsPage from '@/pages/LevelsPage';
 import SkillTreePage from '@/pages/SkillTreePage';
+import BitacoraPage from '@/pages/BitacoraPage';
 
 // ✅ Componente PrivateRoute
 const PrivateRoute = ({ children }) => {
@@ -61,6 +62,7 @@ const AppRoutes = () => {
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/missions" element={<MissionsPage />} />
         <Route path="/skilltree" element={<SkillTreePage />} />
+        <Route path="/bitacora" element={<BitacoraPage />} />
         <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
