@@ -33,19 +33,24 @@ connectDB();
 app.use(helmet());
 app.use(compression());
 
-// CORS estricto: allowlist con el dominio de producción (FRONTEND_URL) + orígenes
-// de desarrollo. Si no hay Origin (curl, health checks server-to-server) se permite.
-// credentials:true es incompatible con '*', por eso se refleja el origen permitido.
+// CORS estricto: allowlist con el dominio de producción + orígenes de desarrollo.
+// Incluimos el dominio real (connectone.space) por defecto para no depender de que
+// FRONTEND_URL esté configurada exactamente. Normalizamos el slash final para evitar
+// fallos por "https://dominio.com/" vs "https://dominio.com".
+const normalizeOrigin = (u) => (u || '').replace(/\/+$/, '');
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  'https://connectone.space',
+  'https://www.connectone.space',
   'http://localhost:5173',
   'http://localhost:4173'
-].filter(Boolean);
+].filter(Boolean).map(normalizeOrigin);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Sin Origin (curl, health checks server-to-server) o en la allowlist -> permitido.
+      if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
         return callback(null, true);
       }
       return callback(new Error(`Origen no permitido por CORS: ${origin}`));

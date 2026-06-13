@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Loader2, ChevronRight, Heart, Brain, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ChevronRight, Heart, Brain, Zap, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const AuthPage = () => {
@@ -29,6 +29,29 @@ const AuthPage = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Frases motivacionales rotativas bajo el título.
+  const phrases = isLogin
+    ? ['Tu mejor versión te espera ✨', 'Pequeños hábitos, grandes cambios', 'Cada día suma XP a tu vida']
+    : ['Comienza tu transformación 🚀', 'Gamifica tu bienestar', 'Sube de nivel en la vida real'];
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setPhraseIndex((p) => p + 1), 3500);
+    return () => clearInterval(id);
+  }, []);
+
+  // Partículas flotantes de fondo (estables entre renders).
+  const [particles] = useState(() =>
+    Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 10 + 6,
+      duration: Math.random() * 12 + 10,
+      delay: Math.random() * 5,
+      emoji: ['✨', '⭐', '💫', '🌟'][Math.floor(Math.random() * 4)]
+    }))
+  );
 
   // Estilo base reutilizable para inputs: padding amplio, bordes sutiles, glassmorphism.
   const inputClass =
@@ -138,18 +161,35 @@ const AuthPage = () => {
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 relative overflow-hidden">
-        {/* Fondo animado suave */}
+        {/* Fondo animado: auroras en movimiento + partículas flotantes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 8, repeat: Infinity }}
+            className="absolute top-10 left-4 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.25, 1], x: [0, 30, 0], opacity: [0.3, 0.55, 0.3] }}
+            transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/15 rounded-full blur-3xl"
-            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 10, repeat: Infinity }}
+            className="absolute bottom-10 right-4 w-96 h-96 bg-pink-500/15 rounded-full blur-3xl"
+            animate={{ scale: [1.2, 1, 1.2], x: [0, -30, 0], opacity: [0.2, 0.45, 0.2] }}
+            transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
           />
+          <motion.div
+            className="absolute top-1/2 left-1/2 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.12, 0.3, 0.12] }}
+            transition={{ duration: 13, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {particles.map((p) => (
+            <motion.div
+              key={p.id}
+              className="absolute select-none"
+              style={{ left: `${p.x}%`, top: `${p.y}%`, fontSize: `${p.size}px` }}
+              initial={{ opacity: 0 }}
+              animate={{ y: [0, -40, 0], opacity: [0, 0.5, 0] }}
+              transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {p.emoji}
+            </motion.div>
+          ))}
         </div>
 
         <motion.div
@@ -158,8 +198,15 @@ const AuthPage = () => {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="w-full max-w-md relative z-10"
         >
+          {/* Glow animado detrás de la tarjeta */}
+          <motion.div
+            aria-hidden
+            className="absolute -inset-1 rounded-[1.7rem] bg-gradient-to-r from-purple-600/40 via-pink-600/40 to-cyan-500/40 blur-2xl"
+            animate={{ opacity: [0.35, 0.7, 0.35] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          />
           {/* Tarjeta glassmorphism: fondo translúcido, borde sutil, sombra difusa con glow violeta */}
-          <Card className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_8px_40px_rgba(124,58,237,0.25)]">
+          <Card className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_8px_40px_rgba(124,58,237,0.25)]">
             <CardHeader className="space-y-5 pt-8">
               {/* Mascota: la cara del oso/panda Energiko en marco circular elegante */}
               <div className="flex justify-center">
@@ -191,6 +238,22 @@ const AuthPage = () => {
                     ? 'Continúa tu viaje de transformación'
                     : 'Comienza tu aventura hacia el bienestar'}
                 </CardDescription>
+                {/* Frase motivacional rotativa */}
+                <div className="h-5 mt-2 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={phraseIndex}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.4 }}
+                      className="text-xs text-purple-300/70 flex items-center justify-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3 text-yellow-400/80" />
+                      {phrases[phraseIndex % phrases.length]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Chips de características (solo en registro) */}
@@ -330,23 +393,33 @@ const AuthPage = () => {
                   )}
                 </AnimatePresence>
 
-                {/* Botón principal con gradiente sutil + estado de carga (cold-start Render) */}
+                {/* Botón principal con gradiente, brillo que barre y estado de carga */}
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold h-12 rounded-xl shadow-lg shadow-purple-900/30 transition-all disabled:opacity-70"
+                  className="relative overflow-hidden w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold h-12 rounded-xl shadow-lg shadow-purple-900/30 transition-all disabled:opacity-70"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Conectando al servidor...
-                    </>
-                  ) : (
-                    <>
-                      {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </>
+                  {!isLoading && (
+                    <motion.span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+                      animate={{ x: ['0%', '450%'] }}
+                      transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.4, ease: 'easeInOut' }}
+                    />
                   )}
+                  <span className="relative z-10 inline-flex items-center justify-center">
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Conectando al servidor...
+                      </>
+                    ) : (
+                      <>
+                        {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </span>
                 </Button>
               </form>
 
