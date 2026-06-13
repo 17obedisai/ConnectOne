@@ -23,7 +23,6 @@ import MissionsPage from '@/pages/MissionsPage';
 import MissionPage from '@/pages/MissionPage';
 import LevelsPage from '@/pages/LevelsPage';
 import SkillTreePage from '@/pages/SkillTreePage';
-import BitacoraPage from '@/pages/BitacoraPage';
 import FinanzasPage from '@/pages/FinanzasPage';
 import NotasPage from '@/pages/NotasPage';
 
@@ -60,7 +59,6 @@ const AppRoutes = () => {
         <Route path="/levels" element={<LevelsPage />} />
         <Route path="/missions" element={<MissionsPage />} />
         <Route path="/skilltree" element={<SkillTreePage />} />
-        <Route path="/bitacora" element={<BitacoraPage />} />
         <Route path="/finanzas" element={<FinanzasPage />} />
         <Route path="/notas" element={<NotasPage />} />
         <Route path="/mission/:id" element={<MissionPage />} />

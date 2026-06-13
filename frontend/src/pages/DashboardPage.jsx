@@ -33,6 +33,11 @@ import {
 // Centro de Comando (Pilar 1) + Motor de IA (Pilar 5)
 import CommandCenter from '@/components/dashboard/CommandCenter';
 import GeminiAssistant from '@/components/dashboard/GeminiAssistant';
+// Bloque B: vista ejecutiva, cierre de día y calendario interno
+import ExecutiveSummary from '@/components/dashboard/ExecutiveSummary';
+import CierreDelDia from '@/components/dashboard/CierreDelDia';
+import CalendarioMes from '@/components/dashboard/CalendarioMes';
+import Recordatorios from '@/components/dashboard/Recordatorios';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -625,6 +630,11 @@ const DashboardPage = () => {
             <GeminiAssistant context={aiContext} prominent />
           </motion.div>
 
+          {/* VISTA EJECUTIVA: qué hiciste hoy + recap del mes */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            <ExecutiveSummary />
+          </motion.div>
+
           {/* CENTRO DE COMANDO: Focus del Día */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -632,6 +642,22 @@ const DashboardPage = () => {
             transition={{ delay: 0.1 }}
           >
             <CommandCenter onContextChange={setAiContext} />
+          </motion.div>
+
+          {/* CIERRE DE DÍA (bitácora) + CALENDARIO INTERNO */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="grid lg:grid-cols-2 gap-6 items-start"
+          >
+            <CierreDelDia />
+            <CalendarioMes />
+          </motion.div>
+
+          {/* GESTIÓN PRÁCTICA: recordatorios */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
+            <Recordatorios />
           </motion.div>
 
           {/* Desafíos Semanales - SOLO 2 VISIBLES QUE ROTAN */}
@@ -867,59 +893,6 @@ const DashboardPage = () => {
                     </p>
                   </CardContent>
                 </Card>
-              </motion.div>
-            </CardContent>
-          </Card>
-
-          {/* Estadísticas del Día */}
-          <Card className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 backdrop-blur border-purple-500/30">
-            <CardHeader>
-              <CardTitle className="text-xl text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-green-400" />
-                Estadísticas de Hoy
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-4 bg-purple-900/30 rounded-xl border border-purple-500/20"
-              >
-                <Target className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-white">
-                  {completedMissions?.length || 0}
-                </p>
-                <p className="text-xs text-purple-200 mt-1">Misiones Completadas</p>
-              </motion.div>
-              
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-4 bg-blue-900/30 rounded-xl border border-blue-500/20"
-              >
-                <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-white">
-                  {JSON.parse(localStorage.getItem('focusStats') || '{"totalMinutes":0}').totalMinutes || 0}
-                </p>
-                <p className="text-xs text-blue-200 mt-1">Min. de Focus</p>
-              </motion.div>
-              
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-4 bg-green-900/30 rounded-xl border border-green-500/20"
-              >
-                <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-white">{stats?.wellbeingScore ?? 0}%</p>
-                <p className="text-xs text-green-200 mt-1">Bienestar General</p>
-              </motion.div>
-              
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="text-center p-4 bg-yellow-900/30 rounded-xl border border-yellow-500/20"
-              >
-                <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-white">
-                  {(completedMissions?.length || 0) * 50}
-                </p>
-                <p className="text-xs text-yellow-200 mt-1">XP Ganado Hoy</p>
               </motion.div>
             </CardContent>
           </Card>
