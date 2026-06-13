@@ -33,9 +33,23 @@ connectDB();
 app.use(helmet());
 app.use(compression());
 
+// CORS estricto: allowlist con el dominio de producción (FRONTEND_URL) + orígenes
+// de desarrollo. Si no hay Origin (curl, health checks server-to-server) se permite.
+// credentials:true es incompatible con '*', por eso se refleja el origen permitido.
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:4173'
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
     credentials: true
   })
 );
@@ -64,14 +78,25 @@ const apiLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { mensaje: 'Demasiadas peticiones, intenta de nuevo más tarde.' }
+  message: { message: 'Demasiadas peticiones, intenta de nuevo más tarde.' }
 });
 app.use('/api/', apiLimiter);
+
+// Limiter estricto anti fuerza-bruta sobre autenticación: 10 intentos por hora/IP.
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Las peticiones exitosas no cuentan: solo penalizamos intentos fallidos.
+  skipSuccessfulRequests: true,
+  message: { message: 'Demasiados intentos de autenticación. Espera una hora e intenta de nuevo.' }
+});
 
 // ─────────────────────────────────────────────────────────────
 // 4. RUTAS — ÚNICA FUENTE DE VERDAD: backend/src/routes/
 // ─────────────────────────────────────────────────────────────
-app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/auth', authLimiter, require('./src/routes/auth'));
 app.use('/api/questionnaire', require('./src/routes/questionnaire'));
 app.use('/api/users', require('./src/routes/users'));
 app.use('/api/missions', require('./src/routes/missions'));
@@ -92,15 +117,17 @@ app.get('/', (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // 404
 app.use((req, res) => {
-  res.status(404).json({ mensaje: 'Ruta no encontrada' });
+  res.status(404).json({ message: 'Ruta no encontrada' });
 });
 
-// Error handler global
+// Error handler global — captura cualquier fallo no manejado para que el
+// proceso NO se caiga y el frontend reciba siempre un message legible.
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    mensaje: 'Error del servidor',
-    ...(process.env.NODE_ENV === 'development' && { error: err.message })
+  const status = err.status || 500;
+  res.status(status).json({
+    message: err.message || 'Error interno del servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 

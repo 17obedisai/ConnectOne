@@ -8,28 +8,32 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Loader2, ChevronRight, Sparkles, Heart, Brain, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ChevronRight, Heart, Brain, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import EnergikoPanda from '@/components/EnergikoPanda';
 
 const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login, register } = useAuth();
-  
+
   const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
-  
+
   const [errors, setErrors] = useState({});
+
+  // Estilo base reutilizable para inputs: padding amplio, bordes sutiles, glassmorphism.
+  const inputClass =
+    'h-12 px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-purple-300/40 ' +
+    'focus:border-purple-400/60 focus:ring-2 focus:ring-purple-500/20 transition-all';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,123 +45,88 @@ const AuthPage = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       newErrors.email = 'Email inválido';
     }
-    
+
     if (formData.password.length < 6) {
       newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
     }
-    
+
     if (!isLogin) {
       if (!formData.nombre || formData.nombre.length < 2) {
         newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
       }
-      
+
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
       if (!passwordRegex.test(formData.password)) {
         newErrors.password = 'La contraseña debe tener mayúsculas, minúsculas y números';
       }
-      
+
       if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Las contraseñas no coinciden';
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
-    setLoading(true);
+
+    setIsLoading(true);
     setErrors({});
-    
+
     try {
-      let result;
-      
-      if (isLogin) {
-        // LOGIN - Usuario existente
-        result = await login({
-          email: formData.email,
-          password: formData.password
+      const result = isLogin
+        ? await login({ email: formData.email, password: formData.password })
+        : await register({
+            nombre: formData.nombre,
+            email: formData.email,
+            password: formData.password
+          });
+
+      if (result.success) {
+        confetti({
+          particleCount: isLogin ? 100 : 150,
+          spread: isLogin ? 70 : 80,
+          origin: { y: 0.6 }
         });
-        
-        if (result.success) {
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-          });
-          
-          toast({
-            title: "¡Bienvenido de vuelta!",
-            description: "Has iniciado sesión exitosamente",
-          });
-          
-          // Si ya completó el cuestionario, va a dashboard
-          // Si no lo ha completado, va al cuestionario
-          if (result.hasCompletedQuestionnaire) {
-            navigate('/dashboard');
-          } else {
-            navigate('/questionnaire');
-          }
+
+        toast({
+          title: isLogin ? '¡Bienvenido de vuelta!' : '¡Cuenta creada!',
+          description: isLogin
+            ? 'Has iniciado sesión exitosamente'
+            : 'Bienvenido a ConnectONE 🎉'
+        });
+
+        // Nuevo usuario o quien no completó el cuestionario va al onboarding.
+        if (isLogin && result.hasCompletedQuestionnaire) {
+          navigate('/dashboard');
         } else {
-          // Fusiona el mensaje general y los errores por campo (Zod) de la API.
-          setErrors({ general: result.error, ...(result.fieldErrors || {}) });
-          toast({
-            title: "Error",
-            description: result.error,
-            variant: "destructive"
-          });
+          navigate('/questionnaire');
         }
       } else {
-        // REGISTER - Usuario nuevo
-        result = await register({
-          nombre: formData.nombre,
-          email: formData.email,
-          password: formData.password
-        });
-        
-        if (result.success) {
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 }
-          });
-          
-          toast({
-            title: "¡Cuenta creada!",
-            description: "Bienvenido a ConnectONE 🎉",
-          });
-          
-          // Nuevo usuario SIEMPRE va al cuestionario
-          navigate('/questionnaire');
-        } else {
-          // Fusiona el mensaje general y los errores por campo (Zod) de la API.
-          setErrors({ general: result.error, ...(result.fieldErrors || {}) });
-          toast({
-            title: "Error",
-            description: result.error,
-            variant: "destructive"
-          });
-        }
+        // Error de negocio devuelto por el backend (ej. credenciales, correo duplicado).
+        // result.error ya contiene el message EXACTO del servidor.
+        setErrors({ general: result.error, ...(result.fieldErrors || {}) });
+        toast({ title: 'Error', description: result.error, variant: 'destructive' });
       }
     } catch (error) {
-      const message = 'Error de conexión con el servidor';
+      // Fallo inesperado de red / cold-start. Mostramos la causa real, nunca un texto genérico.
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo conectar con el servidor. Intenta de nuevo.';
       setErrors({ general: message });
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive"
-      });
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -169,63 +138,64 @@ const AuthPage = () => {
       </Helmet>
 
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 relative overflow-hidden">
-        {/* Fondo animado */}
+        {/* Fondo animado suave */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-20 left-10 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-            }}
+            className="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 8, repeat: Infinity }}
           />
           <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl"
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-            }}
+            className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/15 rounded-full blur-3xl"
+            animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 10, repeat: Infinity }}
           />
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
           className="w-full max-w-md relative z-10"
         >
-          <Card className="bg-slate-900/80 backdrop-blur-xl border-purple-500/30 shadow-2xl">
-            <CardHeader className="space-y-4">
+          {/* Tarjeta glassmorphism: fondo translúcido, borde sutil, sombra difusa con glow violeta */}
+          <Card className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_8px_40px_rgba(124,58,237,0.25)]">
+            <CardHeader className="space-y-5 pt-8">
+              {/* Mascota: la cara del oso/panda Energiko en marco circular elegante */}
               <div className="flex justify-center">
                 <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1, y: [0, -6, 0] }}
+                  transition={{
+                    scale: { type: 'spring', stiffness: 200, damping: 15 },
+                    opacity: { duration: 0.4 },
+                    y: { duration: 4, repeat: Infinity, ease: 'easeInOut' }
+                  }}
+                  className="relative"
                 >
-                  <EnergikoPanda pandaType="logo" size="medium" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/40 to-pink-500/40 blur-xl" />
+                  <img
+                    src="/images/panda-profile.png"
+                    alt="Energiko"
+                    className="relative w-24 h-24 rounded-full object-cover ring-2 ring-white/20 shadow-lg bg-white/5"
+                  />
                 </motion.div>
               </div>
-              
+
               <div className="text-center">
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
                   {isLogin ? '¡Bienvenido de vuelta!' : '¡Únete a ConnectONE!'}
                 </CardTitle>
-                <CardDescription className="text-purple-200 mt-2">
-                  {isLogin 
-                    ? 'Continúa tu viaje de transformación' 
+                <CardDescription className="text-purple-200/80 mt-2">
+                  {isLogin
+                    ? 'Continúa tu viaje de transformación'
                     : 'Comienza tu aventura hacia el bienestar'}
                 </CardDescription>
               </div>
 
-              {/* Características destacadas */}
+              {/* Chips de características (solo en registro) */}
               {!isLogin && (
-                <div className="grid grid-cols-3 gap-2 pt-2">
+                <div className="grid grid-cols-3 gap-2 pt-1">
                   {[
                     { icon: <Heart className="w-4 h-4" />, text: 'Bienestar' },
                     { icon: <Brain className="w-4 h-4" />, text: 'Mindfulness' },
@@ -236,26 +206,30 @@ const AuthPage = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + i * 0.1 }}
-                      className="flex flex-col items-center gap-1 p-2 bg-purple-500/10 rounded-lg"
+                      className="flex flex-col items-center gap-1 p-2 bg-white/5 rounded-xl border border-white/5"
                     >
-                      <div className="text-purple-400">{item.icon}</div>
-                      <span className="text-xs text-purple-200">{item.text}</span>
+                      <div className="text-purple-300">{item.icon}</div>
+                      <span className="text-xs text-purple-200/80">{item.text}</span>
                     </motion.div>
                   ))}
                 </div>
               )}
             </CardHeader>
 
-            <CardContent>
-              {errors.general && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm"
-                >
-                  {errors.general}
-                </motion.div>
-              )}
+            <CardContent className="pb-8">
+              {/* Recuadro de error: muestra el mensaje EXACTO del backend */}
+              <AnimatePresence>
+                {errors.general && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-4 p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-sm"
+                  >
+                    {errors.general}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <AnimatePresence mode="wait">
@@ -265,14 +239,14 @@ const AuthPage = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                     >
-                      <Label htmlFor="nombre" className="text-purple-200">Nombre completo</Label>
+                      <Label htmlFor="nombre" className="text-purple-200/90">Nombre completo</Label>
                       <Input
                         id="nombre"
                         name="nombre"
                         type="text"
                         value={formData.nombre}
                         onChange={handleChange}
-                        className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500"
+                        className={`${inputClass} mt-1.5`}
                         placeholder="Tu nombre"
                       />
                       {errors.nombre && (
@@ -283,14 +257,14 @@ const AuthPage = () => {
                 </AnimatePresence>
 
                 <div>
-                  <Label htmlFor="email" className="text-purple-200">Email</Label>
+                  <Label htmlFor="email" className="text-purple-200/90">Email</Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500"
+                    className={`${inputClass} mt-1.5`}
                     placeholder="tu@email.com"
                   />
                   {errors.email && (
@@ -299,21 +273,21 @@ const AuthPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="password" className="text-purple-200">Contraseña</Label>
-                  <div className="relative">
+                  <Label htmlFor="password" className="text-purple-200/90">Contraseña</Label>
+                  <div className="relative mt-1.5">
                     <Input
                       id="password"
                       name="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={handleChange}
-                      className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500 pr-10"
+                      className={`${inputClass} pr-11`}
                       placeholder="••••••••"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-300 hover:text-purple-200"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -330,21 +304,21 @@ const AuthPage = () => {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                     >
-                      <Label htmlFor="confirmPassword" className="text-purple-200">Confirmar contraseña</Label>
-                      <div className="relative">
+                      <Label htmlFor="confirmPassword" className="text-purple-200/90">Confirmar contraseña</Label>
+                      <div className="relative mt-1.5">
                         <Input
                           id="confirmPassword"
                           name="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
+                          type={showConfirmPassword ? 'text' : 'password'}
                           value={formData.confirmPassword}
                           onChange={handleChange}
-                          className="bg-slate-800/50 border-purple-500/30 text-white focus:border-purple-500 pr-10"
+                          className={`${inputClass} pr-11`}
                           placeholder="••••••••"
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-300"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-300 hover:text-purple-200"
                         >
                           {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -356,15 +330,16 @@ const AuthPage = () => {
                   )}
                 </AnimatePresence>
 
+                {/* Botón principal con gradiente sutil + estado de carga (cold-start Render) */}
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 h-12 rounded-xl"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold h-12 rounded-xl shadow-lg shadow-purple-900/30 transition-all disabled:opacity-70"
                 >
-                  {loading ? (
+                  {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Procesando...
+                      Conectando al servidor...
                     </>
                   ) : (
                     <>
@@ -376,7 +351,7 @@ const AuthPage = () => {
               </form>
 
               <div className="mt-6 text-center">
-                <p className="text-purple-200">
+                <p className="text-purple-200/80 text-sm">
                   {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
                 </p>
                 <Button
@@ -385,7 +360,7 @@ const AuthPage = () => {
                     setIsLogin(!isLogin);
                     setErrors({});
                   }}
-                  className="text-purple-400 hover:text-purple-300 font-semibold"
+                  className="text-purple-300 hover:text-purple-200 font-semibold"
                 >
                   {isLogin ? 'Crear cuenta' : 'Iniciar sesión'}
                 </Button>

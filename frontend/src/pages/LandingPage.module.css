@@ -69,3 +69,44 @@
   animation: respirar 3s ease-in-out infinite;
   will-change: transform;
 }
+
+/* ─────────────────────────────────────────
+   Transiciones suaves de ENTRADA (nativas)
+───────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Entrada global de la página: fundido suave al cargar la Landing */
+.pageEnter {
+  animation: fadeIn 0.8s ease-out both;
+}
+
+/* Subida + fundido elegante para títulos / bloques principales */
+.fadeInUp {
+  animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Respeta la preferencia de movimiento reducido del usuario */
+@media (prefers-reduced-motion: reduce) {
+  .pageEnter,
+  .fadeInUp,
+  .mascotaHero,
+  .pandaCTA,
+  .imagenRespira {
+    animation: none;
+  }
+}

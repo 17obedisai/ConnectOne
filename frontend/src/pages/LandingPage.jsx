@@ -225,7 +225,7 @@ const LandingPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden ${styles.pageEnter}`}>
       
       {/* Partículas de fondo animadas */}
       {particlesVisible && floatingElements.map(el => (
