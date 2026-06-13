@@ -100,13 +100,62 @@
   animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ─────────────────────────────────────────
+   Animaciones PREMIUM: hover de tarjetas,
+   escala de botones y entrada escalonada (hero)
+───────────────────────────────────────── */
+
+/* Tarjetas de características: levantamiento + sombra suave al hover */
+.featureCard {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 45px -12px rgba(124, 58, 237, 0.5);
+}
+
+/* Botones principales: escala sutil al hover, hundimiento al click */
+.ctaButton {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+.ctaButton:hover {
+  transform: scale(1.05);
+}
+.ctaButton:active {
+  transform: scale(0.97);
+}
+
+/* Entrada escalonada (staggered) del Hero: cada .heroItem usa su propio
+   animation-delay (inline) para aparecer uno tras otro, no de golpe. */
+@keyframes heroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.heroItem {
+  opacity: 0;
+  animation: heroReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* Respeta la preferencia de movimiento reducido del usuario */
 @media (prefers-reduced-motion: reduce) {
   .pageEnter,
   .fadeInUp,
   .mascotaHero,
   .pandaCTA,
-  .imagenRespira {
+  .imagenRespira,
+  .heroItem {
     animation: none;
+    opacity: 1;
+  }
+  .featureCard:hover,
+  .ctaButton:hover {
+    transform: none;
   }
 }

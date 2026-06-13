@@ -1,7 +1,15 @@
 import axios from 'axios';
 
-// Cliente HTTP central. baseURL incluye el prefijo /api del backend.
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Cliente HTTP central. baseURL viene ESTRICTAMENTE de VITE_API_URL:
+//   - .env.development -> http://localhost:5000/api (local)
+//   - .env.production  -> https://<backend>.onrender.com/api (Render)
+// Sin fallback "quemado": así un build de producción nunca apunta a localhost.
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  // Aviso temprano en consola si el .env no definió la URL al compilar.
+  console.error('[api] VITE_API_URL no está definida. Revisa tu archivo .env.');
+}
 
 const api = axios.create({
   baseURL: API_URL,

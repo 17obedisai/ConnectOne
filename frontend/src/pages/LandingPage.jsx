@@ -288,34 +288,28 @@ const LandingPage = () => {
       </div>
     </motion.div>
 
-    <motion.h1 
-      className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+    <h1
+      className={`text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 ${styles.heroItem}`}
+      style={{ animationDelay: '0.2s' }}
     >
       Transforma tu vida en una
       <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
         Aventura Épica
       </span>
-    </motion.h1>
+    </h1>
 
-    <motion.p 
-      className="text-xl md:text-2xl text-purple-200 mb-12 max-w-3xl mx-auto"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4 }}
+    <p
+      className={`text-xl md:text-2xl text-purple-200 mb-12 max-w-3xl mx-auto ${styles.heroItem}`}
+      style={{ animationDelay: '0.38s' }}
     >
       Gamifica tu bienestar, desbloquea tu potencial y conviértete en la mejor versión de ti mismo con ConnectONE
-    </motion.p>
+    </p>
 
-    <motion.div 
-      className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6 }}
+    <div
+      className={`flex flex-col sm:flex-row gap-4 justify-center items-center ${styles.heroItem}`}
+      style={{ animationDelay: '0.56s' }}
     >
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <motion.div whileTap={{ scale: 0.95 }}>
         <Button
           onClick={() => {
             navigate('/register');
@@ -325,7 +319,7 @@ const LandingPage = () => {
               origin: { y: 0.6 }
             });
           }}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold px-10 py-6 rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all"
+          className={`bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold px-10 py-6 rounded-full shadow-2xl hover:shadow-purple-500/50 ${styles.ctaButton}`}
         >
           <Sparkles className="w-5 h-5 mr-2" />
                 Comenzar mi Aventura
@@ -333,16 +327,16 @@ const LandingPage = () => {
               </Button>
             </motion.div>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <motion.div whileTap={{ scale: 0.95 }}>
               <Button
                 variant="outline"
                 onClick={() => navigate('/login')}
-                className="border-purple-500 text-white hover:bg-purple-500/20 text-lg px-10 py-6 rounded-full"
+                className={`border-purple-500 text-white hover:bg-purple-500/20 text-lg px-10 py-6 rounded-full ${styles.ctaButton}`}
               >
                 Ya tengo cuenta
               </Button>
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Estadísticas animadas */}
           <motion.div
@@ -411,12 +405,9 @@ const LandingPage = () => {
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <Card className={`
-                  relative overflow-hidden h-full transition-all duration-300
-                  ${hoveredCard === feature.title 
-                    ? 'transform -translate-y-2 shadow-2xl shadow-purple-500/50' 
-                    : ''
-                  }
+                  relative overflow-hidden h-full
                   bg-gradient-to-br from-purple-900/50 to-indigo-900/50 border-purple-500/30
+                  ${styles.featureCard}
                 `}>
                   <CardContent className="p-6">
                     <motion.div
@@ -942,7 +933,11 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="text-3xl">🐼</div>
+                <img
+                  src="/images/panda-profile.png"
+                  alt="ConnectONE"
+                  className="w-8 h-8 rounded-full object-cover ring-1 ring-purple-500/40"
+                />
                 <span className="text-xl font-bold text-white">
                   Connect<span className="text-purple-400">ONE</span>
                 </span>

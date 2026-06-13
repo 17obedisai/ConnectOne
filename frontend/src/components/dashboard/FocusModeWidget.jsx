@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Play, Pause, RotateCcw, Music, Volume2, VolumeX } from 'lucide-react';
+import api from '@/services/api';
 
 const FocusModeWidget = () => {
   const [timeLeft, setTimeLeft] = useState(() => {
@@ -89,15 +90,12 @@ const FocusModeWidget = () => {
       setPomodorosCompleted(newCount);
       localStorage.setItem('pomodorosCompleted', newCount.toString());
       
-      // Enviar al backend
-      fetch('http://localhost:5000/api/missions/pomodoro/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ duration: 25 })
-      });
+      // Registrar la sesión en el backend a través del cliente axios central
+      // (baseURL = VITE_API_URL, token Bearer inyectado por el interceptor).
+      api.post('/pomodoro/session', { duracion: 25, tipo: 'work' })
+        .catch((error) => {
+          console.error('No se pudo registrar la sesión de foco:', error.response?.data?.message || error.message);
+        });
     }
     
     // Cambiar a la siguiente sesión
