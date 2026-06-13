@@ -47,107 +47,107 @@ const LandingPage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Categorías de misiones mejoradas
+  // Áreas del Árbol de Habilidades (alineadas con el producto real)
   const missionCategories = [
     {
-      id: 'ejercicio',
-      icon: '💪',
-      title: 'Fitness Energético',
-      description: 'Rutinas que transforman tu cuerpo y mente',
-      color: 'from-red-500 to-orange-500',
-      benefits: ['Fuerza', 'Resistencia', 'Energía'],
-      missions: ['HIIT Express', 'Yoga Matutino', 'Caminata Mindful']
-    },
-    {
-      id: 'meditacion',
-      icon: '🧘',
-      title: 'Meditación Profunda',
-      description: 'Paz interior y claridad mental',
-      color: 'from-purple-500 to-indigo-500',
-      benefits: ['Calma', 'Focus', 'Consciencia'],
-      missions: ['Respiración 4-7-8', 'Body Scan', 'Mindfulness']
-    },
-    {
-      id: 'lectura',
-      icon: '📚',
-      title: 'Lectura Transformadora',
-      description: 'Expande tu mente y conocimiento',
+      id: 'software',
+      icon: '💻',
+      title: 'Desarrollo de Software',
+      description: 'De la lógica básica a arquitecturas con Python, MongoDB y Git',
       color: 'from-blue-500 to-cyan-500',
-      benefits: ['Sabiduría', 'Creatividad', 'Vocabulario'],
-      missions: ['20 min diarios', 'Toma de notas', 'Reflexión']
+      benefits: ['Frontend', 'Backend', 'Git'],
+      missions: ['Tu primer componente', 'Una API REST', 'Control de versiones']
     },
     {
-      id: 'habitos',
-      icon: '🎯',
-      title: 'Hábitos Dorados',
-      description: 'Construye rutinas que cambian vidas',
+      id: 'audio',
+      icon: '🎚️',
+      title: 'Producción Musical y Audio',
+      description: 'Ruteos, ecualización y mezcla en Logic Pro o Reaper',
+      color: 'from-purple-500 to-pink-500',
+      benefits: ['Mezcla', 'EQ', 'Mastering'],
+      missions: ['Graba tu primera idea', 'Efectos esenciales', 'Exporta tu track']
+    },
+    {
+      id: 'idiomas',
+      icon: '🌍',
+      title: 'Idiomas y Comunicación',
+      description: 'Vocabulario e inmersión diaria, auditados por la IA',
       color: 'from-green-500 to-emerald-500',
-      benefits: ['Disciplina', 'Constancia', 'Progreso'],
-      missions: ['Morning Routine', 'Planificación', 'Journaling']
+      benefits: ['Vocabulario', 'Inmersión', 'Fluidez'],
+      missions: ['10 palabras al día', 'Inmersión 15 min', 'Conversación']
     },
     {
-      id: 'social',
-      icon: '🤝',
-      title: 'Conexión Humana',
-      description: 'Fortalece tus vínculos y relaciones',
-      color: 'from-pink-500 to-rose-500',
-      benefits: ['Empatía', 'Comunicación', 'Amor'],
-      missions: ['Llamada familiar', 'Acto de bondad', 'Gratitud']
+      id: 'fitness',
+      icon: '🏋️',
+      title: 'Fitness y Salud',
+      description: 'Rutinas, nutrición y tiempos de recuperación muscular',
+      color: 'from-red-500 to-orange-500',
+      benefits: ['Fuerza', 'Energía', 'Descanso'],
+      missions: ['Rutina base', 'Hidratación', 'Sueño reparador']
     },
     {
-      id: 'sueno',
-      icon: '😴',
-      title: 'Sueño Reparador',
-      description: 'Optimiza tu descanso y recuperación',
-      color: 'from-indigo-500 to-purple-500',
-      benefits: ['Recuperación', 'Memoria', 'Salud'],
-      missions: ['Rutina nocturna', 'Sin pantallas', 'Meditación sleep']
+      id: 'estudio',
+      icon: '📚',
+      title: 'Hábitos de Estudio',
+      description: 'Aprendizaje efectivo, lectura y organización del tiempo',
+      color: 'from-amber-500 to-yellow-500',
+      benefits: ['Foco', 'Memoria', 'Constancia'],
+      missions: ['Deep work 25 min', 'Toma de notas', 'Repaso espaciado']
+    },
+    {
+      id: 'finanzas',
+      icon: '💰',
+      title: 'Finanzas Personales',
+      description: 'Ahorro, control de gastos y metas de inversión',
+      color: 'from-emerald-500 to-green-600',
+      benefits: ['Ahorro', 'Orden', 'Metas'],
+      missions: ['Registra gastos', 'Define una meta', 'Revisa tu balance']
     }
   ];
 
-  // Características principales
+  // Características principales — el Ultimate OS, cada una con Energiko en su rol.
   const features = [
     {
-      icon: <Trophy className="w-8 h-8" />,
-      title: 'Sistema de Gamificación',
-      description: 'Convierte tu desarrollo personal en una aventura épica con niveles, logros y recompensas',
-      gradient: 'from-yellow-500 to-amber-500',
-      details: ['16 niveles únicos', '100+ logros', 'Skins exclusivas']
-    },
-    {
-      icon: <Brain className="w-8 h-8" />,
-      title: 'IA Personalizada',
-      description: 'Recomendaciones inteligentes que se adaptan a tu estilo de vida y objetivos',
+      image: '/images/panda-level-9.png',
+      title: 'Energiko, tu copiloto con IA',
+      description: 'Un asistente Gemini que no solo conversa: agenda tus bloques, crea recordatorios, registra tus gastos y organiza tu día por ti.',
       gradient: 'from-purple-500 to-pink-500',
-      details: ['Misiones personalizadas', 'Análisis de progreso', 'Consejos adaptativos']
+      details: ['Agenda y recuerda por ti', 'Entiende lenguaje natural', 'Conectado a toda la app']
     },
     {
-      icon: <Users className="w-8 h-8" />,
-      title: 'Comunidad Vibrante',
-      description: 'Conecta con miles de personas en tu mismo viaje de transformación',
-      gradient: 'from-blue-500 to-cyan-500',
-      details: ['Grupos de apoyo', 'Desafíos grupales', 'Mentores']
+      image: '/images/panda-level-7.png',
+      title: 'Centro de Comando',
+      description: 'Tu día en una sola vista: las 3 tareas críticas, tu energía, la agenda híbrida y un calendario interno que conecta todo.',
+      gradient: 'from-cyan-500 to-blue-500',
+      details: ['Focus del día', 'Agenda y calendario', 'Resumen ejecutivo del mes']
     },
     {
-      icon: <Activity className="w-8 h-8" />,
-      title: 'Tracking Completo',
-      description: 'Visualiza tu progreso con estadísticas detalladas y gráficos interactivos',
+      image: '/images/panda-level-16.png',
+      title: 'Árbol de Habilidades',
+      description: 'Rutas de progresión tipo RPG generadas por IA según tus intereses: software, audio, idiomas, fitness y más. Sube de nivel en la vida real.',
+      gradient: 'from-fuchsia-500 to-purple-600',
+      details: ['Rutas creadas por IA', 'Desbloqueo por niveles', 'XP por avanzar de verdad']
+    },
+    {
+      image: '/images/panda-dashboard.png',
+      title: 'Fitness, hábitos y vitalidad',
+      description: 'Registra ejercicio, sueño y energía. Mide tu constancia día a día y cierra cada jornada con una reflexión de tu coach.',
+      gradient: 'from-orange-500 to-red-500',
+      details: ['Tracker de hábitos', 'Vitalidad y descanso', 'Cierre de día con IA']
+    },
+    {
+      image: '/images/panda-level-11.png',
+      title: 'Notas por voz',
+      description: 'Captura ideas al instante hablando. Tus notas, proyectos y lecturas quedan guardados y conectados con tu día.',
+      gradient: 'from-amber-500 to-yellow-500',
+      details: ['Dictado por voz', 'Ideas y proyectos', 'Todo en un lugar']
+    },
+    {
+      image: '/images/panda-level-13.png',
+      title: 'Hub Financiero',
+      description: 'Controla ingresos y gastos del mes y proyecta tus metas de inversión: equipos, plugins o educación. Tus números, claros.',
       gradient: 'from-green-500 to-emerald-500',
-      details: ['Dashboard visual', 'Métricas detalladas', 'Reportes semanales']
-    },
-    {
-      icon: <Shield className="w-8 h-8" />,
-      title: 'Privacidad Total',
-      description: 'Tus datos están seguros y bajo tu completo control siempre',
-      gradient: 'from-red-500 to-pink-500',
-      details: ['Encriptación total', 'Sin publicidad', 'Control de datos']
-    },
-    {
-      icon: <Sparkles className="w-8 h-8" />,
-      title: 'Experiencia Mágica',
-      description: 'Interfaz hermosa y fluida que hace del bienestar algo divertido',
-      gradient: 'from-indigo-500 to-purple-500',
-      details: ['Animaciones fluidas', 'Temas personalizables', 'Modo oscuro/claro']
+      details: ['Flujo de ingresos/gastos', 'Metas de inversión', 'Balance del mes']
     }
   ];
 
@@ -158,7 +158,7 @@ const LandingPage = () => {
       edad: 28,
       avatar: '👩‍💼',
       testimonio: 'ConnectONE cambió mi vida. En 3 meses desarrollé hábitos que nunca pude mantener antes.',
-      logros: ['50 días de racha', 'Nivel 12', '45 logros'],
+      logros: ['50 días de racha', 'Nivel 12', '6 hábitos diarios'],
       rating: 5
     },
     {
@@ -166,7 +166,7 @@ const LandingPage = () => {
       edad: 35,
       avatar: '👨‍💻',
       testimonio: 'La gamificación hace que cada día sea emocionante. ¡Ya llegué al nivel 15!',
-      logros: ['75 días de racha', 'Nivel 15', '62 logros'],
+      logros: ['75 días de racha', 'Nivel 15', 'Rutas IA completas'],
       rating: 5
     },
     {
@@ -174,7 +174,7 @@ const LandingPage = () => {
       edad: 24,
       avatar: '👩‍🎨',
       testimonio: 'Nunca pensé que meditar podría ser tan divertido. Las misiones son increíbles.',
-      logros: ['30 días de racha', 'Nivel 8', '28 logros'],
+      logros: ['30 días de racha', 'Nivel 8', 'Agenda al día'],
       rating: 5
     },
     {
@@ -182,44 +182,40 @@ const LandingPage = () => {
       edad: 42,
       avatar: '👨‍⚕️',
       testimonio: 'Como médico, recomiendo ConnectONE a todos mis pacientes. Es revolucionario.',
-      logros: ['120 días de racha', 'Nivel 20', '85 logros'],
+      logros: ['120 días de racha', 'Nivel 16', 'Maestría'],
       rating: 5
     }
   ];
 
-  // FAQs expandidas
+  // FAQs actualizadas al producto real
   const faqs = [
     {
       pregunta: '¿Qué es ConnectONE?',
-      respuesta: 'ConnectONE es una plataforma revolucionaria de bienestar personal que utiliza gamificación, inteligencia artificial y psicología positiva para ayudarte a desarrollar hábitos saludables de forma divertida y sostenible.'
+      respuesta: 'Tu sistema operativo personal: un gestor diario donde organizas tu tiempo, hábitos, proyectos y finanzas, con la ayuda de Energiko, un asistente con inteligencia artificial que agenda y registra cosas por ti.'
     },
     {
-      pregunta: '¿Cómo funciona el sistema de niveles?',
-      respuesta: 'Comenzarás en el nivel 1 y avanzarás completando misiones diarias. Cada nivel desbloquea nuevas funciones, skins de panda, logros especiales y acceso a contenido exclusivo. ¡Hay 16 niveles épicos esperándote!'
+      pregunta: '¿Qué puede hacer la IA (Energiko)?',
+      respuesta: 'Mucho más que chatear: le hablas con naturalidad ("agéndame el domingo 2h de piano", "recuérdame renovar el SOAT", "registra un gasto de 20.000") y lo ejecuta dentro de la app. También genera tus rutas de aprendizaje y te da una reflexión de tu día.'
+    },
+    {
+      pregunta: '¿Qué es el Árbol de Habilidades?',
+      respuesta: 'Rutas de progresión tipo videojuego que la IA crea según tus intereses (software, audio, idiomas, fitness, finanzas...). Avanzas nodo a nodo, de lo básico a lo avanzado, y ganas XP por progresar de verdad.'
+    },
+    {
+      pregunta: '¿Cómo me ayuda a organizar mi día?',
+      respuesta: 'En el Centro de Comando defines tus 3 tareas críticas, bloqueas tu tiempo en una agenda híbrida y lo ves todo en un calendario interno. Una vista ejecutiva te resume qué hiciste hoy y cómo va tu mes.'
     },
     {
       pregunta: '¿Es realmente gratis?',
-      respuesta: 'Sí, ConnectONE es completamente gratis durante nuestra fase de lanzamiento. Queremos que todos tengan acceso a herramientas de bienestar de calidad sin barreras económicas.'
+      respuesta: 'Sí. Acceso gratuito por lanzamiento. Más adelante habrá planes premium, pero el núcleo seguirá siendo accesible.'
     },
     {
-      pregunta: '¿Cuánto tiempo necesito dedicarle?',
-      respuesta: 'Tan solo 15-30 minutos al día son suficientes para ver resultados significativos. Las misiones están diseñadas para integrarse fácilmente en tu rutina diaria.'
-    },
-    {
-      pregunta: '¿Qué tipo de misiones hay?',
-      respuesta: 'Tenemos más de 100 misiones diferentes en 6 categorías: ejercicio, meditación, lectura, hábitos, social y sueño. Cada una adaptada a diferentes niveles y objetivos.'
-    },
-    {
-      pregunta: '¿Puedo usar ConnectONE en mi móvil?',
-      respuesta: 'Por supuesto! ConnectONE es totalmente responsive y funciona perfectamente en cualquier dispositivo: móvil, tablet o computadora.'
-    },
-    {
-      pregunta: '¿Hay soporte y ayuda disponible?',
-      respuesta: 'Sí, ofrecemos soporte completo a través de chat en vivo, email y nuestra comunidad activa donde otros usuarios y mentores están listos para ayudarte.'
+      pregunta: '¿Puedo usarlo en mi móvil?',
+      respuesta: '¡Claro! Funciona en móvil, tablet y computadora. El dictado por voz de las notas funciona mejor en Chrome.'
     },
     {
       pregunta: '¿Mis datos están seguros?',
-      respuesta: 'Absolutamente. Utilizamos encriptación de grado bancario y nunca compartimos tu información personal con terceros. Tu privacidad es nuestra prioridad.'
+      respuesta: 'Sí. Autenticación con sesión cifrada, tus datos siempre ligados a tu cuenta y sin compartirlos con terceros. Tu privacidad es prioridad.'
     }
   ];
 
@@ -254,7 +250,25 @@ const LandingPage = () => {
 
 {/* HERO SECTION ÉPICA */}
 <section ref={heroRef} className="relative min-h-screen flex items-center justify-center pt-20 px-4">
-  <motion.div 
+  {/* Auroras de color para un inicio más vibrante */}
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <motion.div
+      className="absolute -top-24 -left-16 w-[28rem] h-[28rem] bg-fuchsia-500/30 rounded-full blur-3xl"
+      animate={{ scale: [1, 1.25, 1], x: [0, 40, 0], opacity: [0.3, 0.55, 0.3] }}
+      transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    <motion.div
+      className="absolute top-10 -right-16 w-[26rem] h-[26rem] bg-cyan-500/25 rounded-full blur-3xl"
+      animate={{ scale: [1.2, 1, 1.2], y: [0, 40, 0], opacity: [0.25, 0.5, 0.25] }}
+      transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+    />
+    <motion.div
+      className="absolute bottom-0 left-1/3 w-[24rem] h-[24rem] bg-amber-500/20 rounded-full blur-3xl"
+      animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2] }}
+      transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+    />
+  </div>
+  <motion.div
     style={{ y, opacity }}
     className="max-w-7xl mx-auto text-center relative z-10"
   >
@@ -265,23 +279,23 @@ const LandingPage = () => {
       className="inline-block mb-8"
     >
       <div className="relative">
-        {/* Gradiente de fondo - MOVIDO DETRÁS de la imagen */}
+        {/* Gradiente de fondo multicolor - DETRÁS de la imagen */}
         <motion.div
-          className="absolute -inset-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-3xl opacity-50 -z-10"
-          animate={{ 
+          className="absolute -inset-6 bg-gradient-to-r from-fuchsia-500 via-orange-400 to-cyan-500 rounded-full blur-3xl opacity-50 -z-10"
+          animate={{
             scale: [1, 1.2, 1],
             rotate: [0, 180, 360]
           }}
-          transition={{ 
-            duration: 10, 
+          transition={{
+            duration: 10,
             repeat: Infinity,
             ease: "linear"
           }}
         />
-        
+
         {/* Imagen principal — animación CSS nativa */}
         <img
-          src="/images/panda-level-7.png"
+          src="/images/panda-landing.png"
           alt="Energiko"
           className={`w-64 h-64 md:w-80 md:h-80 mx-auto object-contain relative z-10 ${styles.mascotaHero}`}
         />
@@ -302,7 +316,7 @@ const LandingPage = () => {
       className={`text-xl md:text-2xl text-purple-200 mb-12 max-w-3xl mx-auto ${styles.heroItem}`}
       style={{ animationDelay: '0.38s' }}
     >
-      Gamifica tu bienestar, desbloquea tu potencial y conviértete en la mejor versión de ti mismo con ConnectONE
+      Tu sistema operativo personal: organiza tu día, tus hábitos y tus metas con la ayuda de Energiko y la inteligencia artificial.
     </p>
 
     <div
@@ -409,17 +423,23 @@ const LandingPage = () => {
                   bg-gradient-to-br from-purple-900/50 to-indigo-900/50 border-purple-500/30
                   ${styles.featureCard}
                 `}>
+                  {/* Franja de color superior */}
+                  <div className={`h-1.5 bg-gradient-to-r ${feature.gradient}`} />
                   <CardContent className="p-6">
-                    <motion.div
-                      className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} text-white mb-4`}
-                      animate={hoveredCard === feature.title ? { rotate: [0, -10, 10, 0] } : {}}
-                      transition={{ duration: 0.5 }}
-                    >
-                      {feature.icon}
-                    </motion.div>
-                    
-                    <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                    <p className="text-purple-200 mb-4">{feature.description}</p>
+                    {/* Energiko en su rol, con glow de color */}
+                    <div className="relative flex justify-center mb-4">
+                      <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-25 blur-2xl rounded-full`} />
+                      <motion.img
+                        src={feature.image}
+                        alt={feature.title}
+                        className="relative w-28 h-28 object-contain drop-shadow-xl"
+                        animate={hoveredCard === feature.title ? { y: [0, -8, 0], rotate: [0, -4, 4, 0] } : {}}
+                        transition={{ duration: 0.8 }}
+                      />
+                    </div>
+
+                    <h3 className="text-xl font-bold text-white mb-2 text-center">{feature.title}</h3>
+                    <p className="text-purple-200 mb-4 text-center text-sm">{feature.description}</p>
                     
                     <AnimatePresence>
                       {hoveredCard === feature.title && (
@@ -446,6 +466,46 @@ const LandingPage = () => {
                     </AnimatePresence>
                   </CardContent>
                 </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* GALERÍA: ENERGIKO EN SUS DISTINTOS ROLES */}
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-12">
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
+              Energiko <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-fuchsia-400 to-cyan-400">evoluciona contigo</span>
+            </h2>
+            <p className="text-xl text-purple-200">Tu mascota cambia de forma a medida que dominas nuevas áreas de tu vida.</p>
+          </motion.div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+            {[
+              { img: 'panda-level-3', label: 'Disciplina', color: 'from-red-500 to-orange-500' },
+              { img: 'panda-level-5', label: 'Nutrición', color: 'from-amber-500 to-yellow-500' },
+              { img: 'panda-level-7', label: 'Exploración', color: 'from-cyan-500 to-blue-500' },
+              { img: 'panda-level-9', label: 'Conocimiento', color: 'from-blue-500 to-indigo-500' },
+              { img: 'panda-level-11', label: 'Creatividad', color: 'from-fuchsia-500 to-pink-500' },
+              { img: 'panda-level-13', label: 'Ambición', color: 'from-purple-500 to-violet-500' },
+              { img: 'panda-level-16', label: 'Maestría', color: 'from-yellow-500 to-amber-500' }
+            ].map((e, i) => (
+              <motion.div
+                key={e.img}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                whileHover={{ y: -8 }}
+                className="text-center"
+              >
+                <div className="relative">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${e.color} opacity-25 blur-2xl rounded-full`} />
+                  <img src={`/images/${e.img}.png`} alt={e.label} className="relative w-full aspect-square object-contain drop-shadow-lg" />
+                </div>
+                <p className="text-purple-200 text-sm font-semibold mt-1">{e.label}</p>
               </motion.div>
             ))}
           </div>
