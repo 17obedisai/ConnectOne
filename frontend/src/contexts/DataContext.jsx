@@ -187,17 +187,17 @@ export const DataProvider = ({ children }) => {
         xp: 0,
         xpToNext: 1000,
         xp_to_next_level: 1000,
-        streak: 3, // Para demostración
-        achievements: 1,
-        achievements_unlocked: 1,
-        missionsCompleted: 2, // Para demostración
-        missionsCompletedToday: 2,
-        weeklyMissions: 12,
-        minutesActiveToday: 45,
-        focusTimeToday: 25,
-        wellbeingScore: 85,
-        caloriesBurnedToday: 320,
-        mindfulMinutesToday: 15
+        streak: 0,
+        achievements: 0,
+        achievements_unlocked: 0,
+        missionsCompleted: 0,
+        missionsCompletedToday: 0,
+        weeklyMissions: 0,
+        minutesActiveToday: 0,
+        focusTimeToday: 0,
+        wellbeingScore: 0,
+        caloriesBurnedToday: 0,
+        mindfulMinutesToday: 0
       };
       
       const defaultCustomization = {
@@ -213,15 +213,9 @@ export const DataProvider = ({ children }) => {
           // Simular delay de red
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Por ahora usar valores de demo
+          // Estado inicial real: todo en cero hasta que el usuario registre actividad.
           setProfile(defaultProfile);
           setStats(defaultStats);
-          
-          // Actualizar logros basados en stats
-          updateAchievementProgress('nivel', defaultStats.level - 1);
-          updateAchievementProgress('racha', defaultStats.streak);
-          updateAchievementProgress('misiones', defaultStats.missionsCompleted);
-          
         } catch (error) {
           console.log('Usando datos locales');
           setProfile(defaultProfile);
@@ -233,8 +227,8 @@ export const DataProvider = ({ children }) => {
       }
       
       setCustomization(defaultCustomization);
-      setCompletedActivities(['activity1', 'activity2']); // Demo data
-      setCompletedMissions(['m1', 'm2']); // Demo data
+      setCompletedActivities([]);
+      setCompletedMissions([]);
       
     } catch (error) {
       console.error('Error cargando datos:', error);

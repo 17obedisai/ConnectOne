@@ -569,7 +569,7 @@ const DashboardPage = () => {
                   {greeting === 'Buenas noches' && '🌙'}
                   ¡{greeting}, {user?.nombre || 'Explorador'}!
                 </h1>
-                <p className="text-purple-200 mt-2">Tu bienestar está al 85% hoy</p>
+                <p className="text-purple-200 mt-2">Tu centro de comando para hoy</p>
               </div>
               
               <div className="flex items-center gap-6">
@@ -579,7 +579,7 @@ const DashboardPage = () => {
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    {stats?.streak || 3}
+                    {stats?.streak || 0}
                   </motion.div>
                   <p className="text-sm text-purple-200 flex items-center gap-1 justify-center">
                     <Flame className="w-4 h-4" /> días
@@ -595,7 +595,7 @@ const DashboardPage = () => {
                 
                 <div className="text-center">
                   <div className="text-3xl font-bold text-yellow-400">
-                    {stats?.achievements_unlocked || 1}
+                    {stats?.achievements_unlocked || 0}
                   </div>
                   <p className="text-sm text-purple-200">logros</p>
                 </div>
@@ -607,24 +607,31 @@ const DashboardPage = () => {
               <div className="flex justify-between mb-2">
                 <span className="text-purple-200">Progreso diario</span>
                 <span className="text-white font-bold">
-                  {completedMissions?.length || 2}/5 misiones
+                  {completedMissions?.length || 0}/5 misiones
                 </span>
               </div>
-              <Progress value={((completedMissions?.length || 2) / 5) * 100} className="h-3" />
+              <Progress value={((completedMissions?.length || 0) / 5) * 100} className="h-3" />
             </div>
           </motion.div>
 
           {/* ============================================ */}
-          {/* CENTRO DE COMANDO: Focus del Día + Asistente Gemini */}
+          {/* ASISTENTE GEMINI — protagonista del panel */}
           {/* ============================================ */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
-            className="grid lg:grid-cols-2 gap-6 items-stretch"
+          >
+            <GeminiAssistant context={aiContext} prominent />
+          </motion.div>
+
+          {/* CENTRO DE COMANDO: Focus del Día */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
           >
             <CommandCenter onContextChange={setAiContext} />
-            <GeminiAssistant context={aiContext} />
           </motion.div>
 
           {/* Desafíos Semanales - SOLO 2 VISIBLES QUE ROTAN */}
@@ -879,7 +886,7 @@ const DashboardPage = () => {
               >
                 <Target className="w-6 h-6 text-purple-400 mx-auto mb-2" />
                 <p className="text-3xl font-bold text-white">
-                  {completedMissions?.length || 2}
+                  {completedMissions?.length || 0}
                 </p>
                 <p className="text-xs text-purple-200 mt-1">Misiones Completadas</p>
               </motion.div>
@@ -900,7 +907,7 @@ const DashboardPage = () => {
                 className="text-center p-4 bg-green-900/30 rounded-xl border border-green-500/20"
               >
                 <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-white">85%</p>
+                <p className="text-3xl font-bold text-white">{stats?.wellbeingScore ?? 0}%</p>
                 <p className="text-xs text-green-200 mt-1">Bienestar General</p>
               </motion.div>
               
@@ -910,7 +917,7 @@ const DashboardPage = () => {
               >
                 <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
                 <p className="text-3xl font-bold text-white">
-                  {(completedMissions?.length || 2) * 50}
+                  {(completedMissions?.length || 0) * 50}
                 </p>
                 <p className="text-xs text-yellow-200 mt-1">XP Ganado Hoy</p>
               </motion.div>

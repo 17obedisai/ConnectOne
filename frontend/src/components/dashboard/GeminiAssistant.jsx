@@ -15,7 +15,8 @@ const QUICK_PROMPTS = [
 ];
 
 // context: { energia, horasSueno, tareasFoco: string[] } — se envía al coach para personalizar.
-const GeminiAssistant = ({ context = {} }) => {
+// prominent: versión grande/protagonista (chat más alto) para el panel principal.
+const GeminiAssistant = ({ context = {}, prominent = false }) => {
   const [messages, setMessages] = useState([
     {
       role: 'model',
@@ -74,7 +75,7 @@ const GeminiAssistant = ({ context = {} }) => {
         {/* Historial */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-80 min-h-[12rem]"
+          className={`flex-1 overflow-y-auto space-y-3 pr-1 ${prominent ? 'max-h-[26rem] min-h-[19rem]' : 'max-h-80 min-h-[12rem]'}`}
         >
           <AnimatePresence initial={false}>
             {messages.map((m, i) => (

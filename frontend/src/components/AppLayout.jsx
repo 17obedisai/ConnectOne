@@ -121,30 +121,9 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       color: 'from-emerald-500 to-green-600',
       emoji: '💰'
     },
-    { 
-      to: '/map', 
-      icon: <GitBranch className="w-4 h-4 sm:w-5 sm:h-5" />, 
-      text: 'Mapa de Progreso',
-      color: 'from-green-500 to-emerald-600',
-      emoji: '🗺️'
-    },
-    { 
-      to: '/levels', 
-      icon: <Star className="w-4 h-4 sm:w-5 sm:h-5" />, 
-      text: 'Niveles',
-      color: 'from-yellow-500 to-amber-600',
-      emoji: '⭐'
-    },
-    { 
-      to: '/achievements', 
-      icon: <Award className="w-4 h-4 sm:w-5 sm:h-5" />, 
-      text: 'Logros',
-      color: 'from-orange-500 to-red-600',
-      emoji: '🏆'
-    },
-    { 
-      to: '/profile', 
-      icon: <User className="w-4 h-4 sm:w-5 sm:h-5" />, 
+    {
+      to: '/profile',
+      icon: <User className="w-4 h-4 sm:w-5 sm:h-5" />,
       text: 'Mi Perfil',
       color: 'from-pink-500 to-rose-600',
       emoji: '👤'
