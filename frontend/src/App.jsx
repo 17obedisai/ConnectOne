@@ -21,8 +21,6 @@ import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import MissionsPage from '@/pages/MissionsPage';
 import MissionPage from '@/pages/MissionPage';
-import AchievementsPage from '@/pages/AchievementsPage';
-import ProgressMapPage from '@/pages/ProgressMapPage';
 import LevelsPage from '@/pages/LevelsPage';
 import SkillTreePage from '@/pages/SkillTreePage';
 import BitacoraPage from '@/pages/BitacoraPage';
@@ -58,9 +56,7 @@ const AppRoutes = () => {
       <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
         <Route path="/onboarding" element={<QuestionnairePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/map" element={<ProgressMapPage />} />
         <Route path="/levels" element={<LevelsPage />} />
-        <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/missions" element={<MissionsPage />} />
         <Route path="/skilltree" element={<SkillTreePage />} />
         <Route path="/bitacora" element={<BitacoraPage />} />
