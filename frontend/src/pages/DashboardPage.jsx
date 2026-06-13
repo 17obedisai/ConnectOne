@@ -21,14 +21,18 @@ import {
 } from 'lucide-react';
 
 // Importar utilidades del dashboard
-import { 
-  getWeeklyChallengesForUser, 
-  getChallengeProgress, 
+import {
+  getWeeklyChallengesForUser,
+  getChallengeProgress,
   updateChallengeProgress,
   getRecommendedMissions,
   TimerPersistence,
   formatTime
 } from '@/lib/dashboardUtils';
+
+// Centro de Comando (Pilar 1) + Motor de IA (Pilar 5)
+import CommandCenter from '@/components/dashboard/CommandCenter';
+import GeminiAssistant from '@/components/dashboard/GeminiAssistant';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -41,6 +45,8 @@ const DashboardPage = () => {
   const [toolModal, setToolModal] = useState(null);
   const [weeklyChallenges, setWeeklyChallenges] = useState([]);
   const [misionesRecomendadas, setMisionesRecomendadas] = useState([]);
+  // Contexto en vivo (energía, sueño, tareas) que el Centro de Comando comparte con la IA.
+  const [aiContext, setAiContext] = useState({});
   
   // Estados de herramientas de bienestar
   const [wellnessData, setWellnessData] = useState({
@@ -606,6 +612,19 @@ const DashboardPage = () => {
               </div>
               <Progress value={((completedMissions?.length || 2) / 5) * 100} className="h-3" />
             </div>
+          </motion.div>
+
+          {/* ============================================ */}
+          {/* CENTRO DE COMANDO: Focus del Día + Asistente Gemini */}
+          {/* ============================================ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="grid lg:grid-cols-2 gap-6 items-stretch"
+          >
+            <CommandCenter onContextChange={setAiContext} />
+            <GeminiAssistant context={aiContext} />
           </motion.div>
 
           {/* Desafíos Semanales - SOLO 2 VISIBLES QUE ROTAN */}

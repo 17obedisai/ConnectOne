@@ -93,6 +93,15 @@ const authLimiter = rateLimit({
   message: { message: 'Demasiados intentos de autenticación. Espera una hora e intenta de nuevo.' }
 });
 
+// Limiter para IA: las llamadas a Gemini cuestan dinero/tokens. 30 por 15 min/IP.
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Has alcanzado el límite de consultas a la IA. Intenta de nuevo en unos minutos.' }
+});
+
 // ─────────────────────────────────────────────────────────────
 // 4. RUTAS — ÚNICA FUENTE DE VERDAD: backend/src/routes/
 // ─────────────────────────────────────────────────────────────
@@ -102,6 +111,8 @@ app.use('/api/users', require('./src/routes/users'));
 app.use('/api/missions', require('./src/routes/missions'));
 app.use('/api/achievements', require('./src/routes/achievements'));
 app.use('/api/pomodoro', require('./src/routes/pomodoro'));
+app.use('/api/dailyfocus', require('./src/routes/dailyFocus'));
+app.use('/api/ai', aiLimiter, require('./src/routes/ai'));
 
 // Health check
 app.get('/', (req, res) => {
