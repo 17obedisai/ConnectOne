@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  LayoutDashboard, User, Award, Star, GitBranch, Settings,
-  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, BookOpen, Wallet
+  LayoutDashboard, User, Settings,
+  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, BookOpen, Wallet, StickyNote
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -120,6 +120,13 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       text: 'Finanzas',
       color: 'from-emerald-500 to-green-600',
       emoji: '💰'
+    },
+    {
+      to: '/notas',
+      icon: <StickyNote className="w-4 h-4 sm:w-5 sm:h-5" />,
+      text: 'Notas',
+      color: 'from-amber-500 to-yellow-600',
+      emoji: '📝'
     },
     {
       to: '/profile',

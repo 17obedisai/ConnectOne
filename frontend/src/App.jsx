@@ -25,6 +25,7 @@ import LevelsPage from '@/pages/LevelsPage';
 import SkillTreePage from '@/pages/SkillTreePage';
 import BitacoraPage from '@/pages/BitacoraPage';
 import FinanzasPage from '@/pages/FinanzasPage';
+import NotasPage from '@/pages/NotasPage';
 
 // ✅ Componente PrivateRoute
 const PrivateRoute = ({ children }) => {
@@ -61,6 +62,7 @@ const AppRoutes = () => {
         <Route path="/skilltree" element={<SkillTreePage />} />
         <Route path="/bitacora" element={<BitacoraPage />} />
         <Route path="/finanzas" element={<FinanzasPage />} />
+        <Route path="/notas" element={<NotasPage />} />
         <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />

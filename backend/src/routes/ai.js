@@ -8,6 +8,7 @@ const DailyFocus = require('../models/DailyFocus');
 const Reminder = require('../models/Reminder');
 const Transaction = require('../models/Transaction');
 const JournalEntry = require('../models/JournalEntry');
+const Note = require('../models/Note');
 const { isConfigured, generateAssistantReply, runAssistantAgent } = require('../services/gemini');
 
 const hoy = () => new Date().toISOString().slice(0, 10);
@@ -76,6 +77,18 @@ const toolDeclarations = [
         gratitud: { type: Type.STRING }
       }
     }
+  },
+  {
+    name: 'crear_nota',
+    description: 'Guarda una nota rápida del usuario (idea, avance de un proyecto, página de un libro, recordatorio personal).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        contenido: { type: Type.STRING },
+        categoria: { type: Type.STRING, enum: ['idea', 'proyecto', 'lectura', 'personal', 'tarea', 'otro'] }
+      },
+      required: ['contenido']
+    }
   }
 ];
 
@@ -143,6 +156,15 @@ const makeExecuteTool = (userId) => async (name, args) => {
         { upsert: true, setDefaultsOnInsert: true }
       );
       return { ok: true, tipo: 'journal', ...update };
+    }
+    case 'crear_nota': {
+      if (!args.contenido || !args.contenido.trim()) return { ok: false, motivo: 'Nota vacía' };
+      const n = await Note.create({
+        userId,
+        contenido: args.contenido.trim(),
+        categoria: ['idea', 'proyecto', 'lectura', 'personal', 'tarea', 'otro'].includes(args.categoria) ? args.categoria : 'otro'
+      });
+      return { ok: true, tipo: 'nota', id: n._id, contenido: n.contenido };
     }
     default:
       return { ok: false, motivo: `Herramienta desconocida: ${name}` };

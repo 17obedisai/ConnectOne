@@ -20,7 +20,8 @@ const ACTION_META = {
   agendar_bloque: { emoji: '📅', label: 'Agendado' },
   agregar_tarea_critica: { emoji: '🎯', label: 'Tarea del día' },
   registrar_movimiento: { emoji: '💰', label: 'Movimiento' },
-  anotar_aprendizaje: { emoji: '📓', label: 'Bitácora' }
+  anotar_aprendizaje: { emoji: '📓', label: 'Bitácora' },
+  crear_nota: { emoji: '📝', label: 'Nota' }
 };
 const accionDetalle = (a) =>
   a.args?.titulo || a.args?.texto || a.args?.descripcion ||
