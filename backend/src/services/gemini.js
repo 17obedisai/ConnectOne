@@ -116,9 +116,66 @@ const generateAssistantReply = async ({ message, history = [], context = {} }) =
   }
 };
 
+// Genera una ruta de progresión tipo árbol de habilidades RPG para un área de interés.
+// Devuelve { ok, configured, nodos: [{ titulo, descripcion, recurso, xp }] }.
+const generateSkillTree = async ({ nombreArea, descripcionArea = '', nivelUsuario = 1 }) => {
+  const ai = getClient();
+  if (!ai) {
+    return { ok: false, configured: false, nodos: [] };
+  }
+
+  const prompt = `Diseña una ruta de progresión tipo "árbol de habilidades" de videojuego RPG,
+pero aplicada a la vida real, para el área: "${nombreArea}"${descripcionArea ? ` (${descripcionArea})` : ''}.
+El usuario está aproximadamente en el nivel ${nivelUsuario} de su viaje.
+
+Reglas:
+- Genera entre 6 y 8 nodos ORDENADOS de lo más básico/fundacional a lo más avanzado.
+- Cada nodo es una habilidad o reto CONCRETO y accionable (no genérico).
+- "recurso" = una herramienta, libro, app o práctica concreta recomendada (o cadena vacía).
+- "xp" crece con la dificultad (ej. 100, 150, 200, 300...).
+
+Devuelve EXCLUSIVAMENTE JSON válido con esta forma exacta:
+{"nodos":[{"titulo":"string corto","descripcion":"1 frase accionable","recurso":"string","xp":120}]}
+Responde en español.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        responseMimeType: 'application/json',
+        temperature: 0.85,
+        // Desactivamos el "thinking" de 2.5 Flash para que TODO el presupuesto de
+        // tokens vaya a la salida JSON (si no, el JSON se trunca a medio string).
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 3000
+      }
+    });
+
+    const parsed = JSON.parse(response.text || '{}');
+    const nodos = Array.isArray(parsed.nodos)
+      ? parsed.nodos
+          .filter((n) => n && n.titulo)
+          .map((n, i) => ({
+            titulo: String(n.titulo).slice(0, 120),
+            descripcion: String(n.descripcion || '').slice(0, 300),
+            recurso: String(n.recurso || '').slice(0, 160),
+            xp: Number.isFinite(n.xp) ? Math.max(50, Math.round(n.xp)) : 100 + i * 50
+          }))
+      : [];
+
+    return { ok: nodos.length > 0, configured: true, nodos };
+  } catch (error) {
+    console.error('[gemini] Error generando árbol de habilidades:', error.message);
+    return { ok: false, configured: true, nodos: [] };
+  }
+};
+
 module.exports = {
   MODEL,
   SYSTEM_INSTRUCTION,
   isConfigured,
-  generateAssistantReply
+  generateAssistantReply,
+  generateSkillTree
 };

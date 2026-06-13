@@ -93,12 +93,19 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       color: 'from-purple-500 to-indigo-600',
       emoji: '🏠'
     },
-    { 
-      to: '/missions', 
-      icon: <Target className="w-4 h-4 sm:w-5 sm:h-5" />, 
+    {
+      to: '/missions',
+      icon: <Target className="w-4 h-4 sm:w-5 sm:h-5" />,
       text: 'Misiones',
       color: 'from-blue-500 to-cyan-600',
       emoji: '🎯'
+    },
+    {
+      to: '/skilltree',
+      icon: <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />,
+      text: 'Árbol de Habilidades',
+      color: 'from-fuchsia-500 to-purple-600',
+      emoji: '🌳'
     },
     { 
       to: '/map', 

@@ -112,6 +112,7 @@ app.use('/api/missions', require('./src/routes/missions'));
 app.use('/api/achievements', require('./src/routes/achievements'));
 app.use('/api/pomodoro', require('./src/routes/pomodoro'));
 app.use('/api/dailyfocus', require('./src/routes/dailyFocus'));
+app.use('/api/skilltree', require('./src/routes/skillTree'));
 app.use('/api/ai', aiLimiter, require('./src/routes/ai'));
 
 // Health check

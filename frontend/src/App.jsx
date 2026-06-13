@@ -24,6 +24,7 @@ import MissionPage from '@/pages/MissionPage';
 import AchievementsPage from '@/pages/AchievementsPage';
 import ProgressMapPage from '@/pages/ProgressMapPage';
 import LevelsPage from '@/pages/LevelsPage';
+import SkillTreePage from '@/pages/SkillTreePage';
 
 // ✅ Componente PrivateRoute
 const PrivateRoute = ({ children }) => {
@@ -59,6 +60,7 @@ const AppRoutes = () => {
         <Route path="/levels" element={<LevelsPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/missions" element={<MissionsPage />} />
+        <Route path="/skilltree" element={<SkillTreePage />} />
         <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />
