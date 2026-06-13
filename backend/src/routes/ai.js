@@ -1,60 +1,196 @@
 const express = require('express');
 const router = express.Router();
+const { Type } = require('@google/genai');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const Questionnaire = require('../models/Questionnaire');
-const { isConfigured, generateAssistantReply } = require('../services/gemini');
+const DailyFocus = require('../models/DailyFocus');
+const Reminder = require('../models/Reminder');
+const Transaction = require('../models/Transaction');
+const JournalEntry = require('../models/JournalEntry');
+const { isConfigured, generateAssistantReply, runAssistantAgent } = require('../services/gemini');
+
+const hoy = () => new Date().toISOString().slice(0, 10);
+const esFecha = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+// Declaración de herramientas que el agente Energiko puede invocar.
+const toolDeclarations = [
+  {
+    name: 'crear_recordatorio',
+    description: 'Crea un recordatorio de gestión práctica (ej. cambio de aceite de la moto, renovar un documento, una cita).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        titulo: { type: Type.STRING, description: 'Qué hay que recordar' },
+        categoria: { type: Type.STRING, enum: ['moto', 'documento', 'salud', 'finanzas', 'hogar', 'otro'] },
+        fechaLimite: { type: Type.STRING, description: 'Fecha límite en formato YYYY-MM-DD (opcional)' }
+      },
+      required: ['titulo']
+    }
+  },
+  {
+    name: 'agendar_bloque',
+    description: 'Agenda un bloque de tiempo en la agenda de un día concreto (ej. domingo 2h de piano, viernes 7pm mezclar una canción).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        titulo: { type: Type.STRING },
+        fecha: { type: Type.STRING, description: 'Día del bloque en formato YYYY-MM-DD' },
+        inicio: { type: Type.STRING, description: 'Hora de inicio HH:MM (24h)' },
+        fin: { type: Type.STRING, description: 'Hora de fin HH:MM (24h), opcional' },
+        tipo: { type: Type.STRING, enum: ['trabajo', 'estudio', 'descanso', 'fitness'] }
+      },
+      required: ['titulo', 'fecha', 'inicio']
+    }
+  },
+  {
+    name: 'agregar_tarea_critica',
+    description: 'Agrega una tarea crítica al Focus del Día de HOY (máximo 3 tareas).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: { texto: { type: Type.STRING } },
+      required: ['texto']
+    }
+  },
+  {
+    name: 'registrar_movimiento',
+    description: 'Registra un ingreso o un gasto en el hub financiero.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        tipo: { type: Type.STRING, enum: ['ingreso', 'gasto'] },
+        monto: { type: Type.NUMBER, description: 'Monto en pesos (COP)' },
+        categoria: { type: Type.STRING },
+        descripcion: { type: Type.STRING }
+      },
+      required: ['tipo', 'monto']
+    }
+  },
+  {
+    name: 'anotar_aprendizaje',
+    description: 'Guarda en la bitácora de HOY qué aprendió el usuario y/o qué agradece.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        aprendizaje: { type: Type.STRING },
+        gratitud: { type: Type.STRING }
+      }
+    }
+  }
+];
+
+// Fábrica del ejecutor de herramientas: cierra sobre el userId autenticado.
+const makeExecuteTool = (userId) => async (name, args) => {
+  switch (name) {
+    case 'crear_recordatorio': {
+      const r = await Reminder.create({
+        userId,
+        titulo: (args.titulo || '').trim(),
+        categoria: args.categoria || 'otro',
+        fechaLimite: esFecha(args.fechaLimite) ? new Date(args.fechaLimite) : null
+      });
+      return { ok: true, tipo: 'recordatorio', id: r._id, titulo: r.titulo };
+    }
+    case 'agendar_bloque': {
+      const fecha = esFecha(args.fecha) ? args.fecha : hoy();
+      const bloque = {
+        titulo: (args.titulo || '').trim(),
+        inicio: args.inicio || '',
+        fin: args.fin || '',
+        tipo: ['trabajo', 'estudio', 'descanso', 'fitness'].includes(args.tipo) ? args.tipo : 'trabajo'
+      };
+      await DailyFocus.findOneAndUpdate(
+        { userId, fecha },
+        { $push: { agenda: bloque }, $setOnInsert: { userId, fecha } },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+      return { ok: true, tipo: 'agenda', fecha, ...bloque };
+    }
+    case 'agregar_tarea_critica': {
+      const fecha = hoy();
+      const plan = await DailyFocus.findOne({ userId, fecha });
+      if (plan && plan.tareas.length >= 3) {
+        return { ok: false, motivo: 'Ya tienes 3 tareas críticas hoy' };
+      }
+      await DailyFocus.findOneAndUpdate(
+        { userId, fecha },
+        { $push: { tareas: { texto: (args.texto || '').trim(), completada: false } }, $setOnInsert: { userId, fecha } },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+      return { ok: true, tipo: 'tarea', texto: args.texto };
+    }
+    case 'registrar_movimiento': {
+      const monto = Number(args.monto);
+      if (!Number.isFinite(monto) || monto <= 0) return { ok: false, motivo: 'Monto inválido' };
+      const t = await Transaction.create({
+        userId,
+        tipo: args.tipo === 'ingreso' ? 'ingreso' : 'gasto',
+        monto,
+        categoria: args.categoria || 'otro',
+        descripcion: args.descripcion || ''
+      });
+      return { ok: true, tipo: 'movimiento', movimiento: t.tipo, monto: t.monto, categoria: t.categoria };
+    }
+    case 'anotar_aprendizaje': {
+      const fecha = hoy();
+      const update = {};
+      if (args.aprendizaje) update.aprendizaje = args.aprendizaje;
+      if (args.gratitud) update.gratitud = args.gratitud;
+      if (!Object.keys(update).length) return { ok: false, motivo: 'Nada que anotar' };
+      await JournalEntry.findOneAndUpdate(
+        { userId, fecha },
+        { $set: update, $setOnInsert: { userId, fecha } },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+      return { ok: true, tipo: 'journal', ...update };
+    }
+    default:
+      return { ok: false, motivo: `Herramienta desconocida: ${name}` };
+  }
+};
 
 // GET /api/ai/status — ¿está el motor de IA configurado en el servidor?
 router.get('/status', auth, (req, res) => {
   res.json({ success: true, configured: isConfigured() });
 });
 
-// POST /api/ai/assistant — chat con el coach Energiko.
-// body: { message: string, history?: [{role,text}], context?: { energia, minutosLibres, ... } }
+// POST /api/ai/assistant — chat AGÉNTICO: Energiko conversa y EJECUTA acciones en la app.
 router.post('/assistant', auth, async (req, res) => {
   try {
     const { message, history = [], context = {} } = req.body;
-
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, message: 'El mensaje es obligatorio' });
     }
 
-    // Enriquecemos el contexto con datos reales del usuario (no confiamos en el cliente
-    // para identidad: nombre/nivel/intereses se leen de la base de datos).
     const [usuario, cuestionario] = await Promise.all([
       User.findById(req.user.id).select('nombre nivel perfilInicial'),
-      Questionnaire.findOne({ userId: req.user.id }).select('interests main_goal')
+      Questionnaire.findOne({ userId: req.user.id }).select('interests')
     ]);
 
-    const serverContext = {
+    const mergedContext = {
+      fechaActual: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'full', timeStyle: 'short' }),
       nombre: usuario?.nombre,
       nivel: usuario?.nivel,
-      intereses: cuestionario?.interests || usuario?.perfilInicial?.intereses || []
-    };
-
-    // El cliente puede aportar contexto efímero (energía de hoy, minutos libres, tareas).
-    const mergedContext = {
-      ...serverContext,
+      intereses: cuestionario?.interests || usuario?.perfilInicial?.intereses || [],
       energia: context.energia,
       horasSueno: context.horasSueno,
       minutosLibres: context.minutosLibres,
       tareasFoco: Array.isArray(context.tareasFoco) ? context.tareasFoco.slice(0, 5) : undefined
     };
 
-    // Limitamos el historial para controlar tokens/costo.
-    const safeHistory = Array.isArray(history) ? history.slice(-10) : [];
-
-    const result = await generateAssistantReply({
+    const result = await runAssistantAgent({
       message: message.trim(),
-      history: safeHistory,
-      context: mergedContext
+      history: Array.isArray(history) ? history.slice(-10) : [],
+      context: mergedContext,
+      tools: toolDeclarations,
+      executeTool: makeExecuteTool(req.user.id)
     });
 
     res.json({
       success: result.ok,
       configured: result.configured,
-      reply: result.text
+      reply: result.text,
+      acciones: result.acciones || []
     });
   } catch (error) {
     console.error('[ai/assistant]', error);
@@ -63,11 +199,9 @@ router.post('/assistant', auth, async (req, res) => {
 });
 
 // POST /api/ai/reflect — reflexión breve del coach sobre el cierre de día.
-// body: { aprendizaje, gratitud, concentracion, calidadSueno, nivelEstres }
 router.post('/reflect', auth, async (req, res) => {
   try {
     const { aprendizaje, gratitud, concentracion, calidadSueno, nivelEstres } = req.body;
-
     const usuario = await User.findById(req.user.id).select('nombre');
 
     const partes = [];
@@ -86,11 +220,7 @@ router.post('/reflect', auth, async (req, res) => {
       'Dame una reflexión breve (máx 3 frases): reconoce lo bueno, señala UN patrón a cuidar ' +
       'y propón UN foco concreto para mañana. Tono cálido pero directo.';
 
-    const result = await generateAssistantReply({
-      message,
-      context: { nombre: usuario?.nombre }
-    });
-
+    const result = await generateAssistantReply({ message, context: { nombre: usuario?.nombre } });
     res.json({ success: result.ok, configured: result.configured, reflexion: result.text });
   } catch (error) {
     console.error('[ai/reflect]', error);

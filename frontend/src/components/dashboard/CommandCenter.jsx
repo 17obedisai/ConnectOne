@@ -35,20 +35,24 @@ const CommandCenter = ({ onContextChange }) => {
   const [agendaForm, setAgendaForm] = useState({ inicio: '', fin: '', titulo: '', tipo: 'trabajo' });
   const saveTimer = useRef(null);
 
-  // Carga el plan de hoy.
+  // Carga (o recarga) el plan de hoy.
+  const loadPlan = async () => {
+    try {
+      const { data } = await api.get('/dailyfocus/today');
+      if (data?.data) setPlan({ ...emptyPlan, ...data.data });
+    } catch (error) {
+      console.error('No se pudo cargar el plan del día:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const { data } = await api.get('/dailyfocus/today');
-        if (active && data?.data) setPlan({ ...emptyPlan, ...data.data });
-      } catch (error) {
-        console.error('No se pudo cargar el plan del día:', error.message);
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => { active = false; };
+    loadPlan();
+    // El agente de IA emite 'connectone:refresh' tras ejecutar acciones (agregar tarea, agendar...).
+    const onRefresh = () => loadPlan();
+    window.addEventListener('connectone:refresh', onRefresh);
+    return () => window.removeEventListener('connectone:refresh', onRefresh);
   }, []);
 
   // Propaga el contexto (energía, sueño, tareas pendientes) al asistente de IA.

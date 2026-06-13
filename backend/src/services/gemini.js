@@ -49,6 +49,7 @@ const isConfigured = () => Boolean(process.env.GEMINI_API_KEY);
 // Construye un bloque de contexto legible para el modelo a partir de datos del usuario.
 const buildContextBlock = (context = {}) => {
   const lines = [];
+  if (context.fechaActual) lines.push(`Fecha y hora actual: ${context.fechaActual}`);
   if (context.nombre) lines.push(`Nombre: ${context.nombre}`);
   if (context.nivel != null) lines.push(`Nivel en la app: ${context.nivel}`);
   if (context.energia) lines.push(`Energía hoy (1-5): ${context.energia}`);
@@ -172,10 +173,101 @@ Responde en español.`;
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+// AGENTE: Energiko que EJECUTA acciones en la app vía function calling.
+// ─────────────────────────────────────────────────────────────
+const AGENT_SYSTEM_INSTRUCTION = `
+${SYSTEM_INSTRUCTION}
+
+Además de aconsejar, PUEDES ejecutar acciones reales en ConnectONE con las herramientas
+disponibles (crear recordatorios, agendar bloques de tiempo, agregar tareas críticas del día,
+registrar ingresos/gastos y anotar aprendizajes en la bitácora).
+
+Reglas de uso de herramientas:
+- Si el usuario pide crear, agendar, registrar, apuntar o recordar algo, USA la herramienta
+  correspondiente en lugar de solo describir lo que haría.
+- Usa la "Fecha y hora actual" del contexto para resolver fechas relativas ("hoy", "mañana",
+  "el domingo", "el viernes a las 7pm"). Pasa SIEMPRE fecha como YYYY-MM-DD y horas como HH:MM (24h).
+- Si falta un dato esencial (p. ej. el monto de un gasto), pregúntalo en una frase corta; no lo inventes.
+- Tras ejecutar, confirma en 1-2 frases lo que hiciste, claro y cálido.
+- Para dudas o consejo sin acción, responde normal, sin usar herramientas.
+`.trim();
+
+// Orquesta un turno del agente: llama al modelo con herramientas, ejecuta las que pida
+// (vía executeTool, que vive en la ruta y tiene acceso a la BD) y devuelve la confirmación.
+const runAssistantAgent = async ({ message, history = [], context = {}, tools = [], executeTool }) => {
+  const ai = getClient();
+  if (!ai) {
+    return {
+      ok: false,
+      configured: false,
+      text: 'Aún no tengo conectado mi cerebro de IA (falta GEMINI_API_KEY en el servidor). ' +
+        'Cuando lo configures podré agendar, recordar y registrar cosas por ti. 🤖',
+      acciones: []
+    };
+  }
+
+  const contents = history
+    .filter((m) => m && m.text)
+    .map((m) => ({ role: m.role === 'model' ? 'model' : 'user', parts: [{ text: m.text }] }));
+  contents.push({ role: 'user', parts: [{ text: `${message}${buildContextBlock(context)}` }] });
+
+  const toolConfig = tools.length ? [{ functionDeclarations: tools }] : undefined;
+
+  try {
+    const first = await ai.models.generateContent({
+      model: MODEL,
+      contents,
+      config: {
+        systemInstruction: AGENT_SYSTEM_INSTRUCTION,
+        tools: toolConfig,
+        temperature: 0.6,
+        maxOutputTokens: 900
+      }
+    });
+
+    const calls = first.functionCalls || [];
+
+    // Sin acciones: respuesta de chat normal.
+    if (!calls.length) {
+      return { ok: true, configured: true, text: (first.text || '').trim(), acciones: [] };
+    }
+
+    // Ejecuta cada herramienta y arma las respuestas para el segundo turno.
+    contents.push({ role: 'model', parts: calls.map((c) => ({ functionCall: { name: c.name, args: c.args } })) });
+    const acciones = [];
+    const responseParts = [];
+    for (const c of calls) {
+      let result;
+      try {
+        result = await executeTool(c.name, c.args || {});
+      } catch (e) {
+        result = { ok: false, error: e.message };
+      }
+      acciones.push({ name: c.name, args: c.args || {}, result });
+      responseParts.push({ functionResponse: { name: c.name, response: (result && typeof result === 'object') ? result : { result } } });
+    }
+    contents.push({ role: 'user', parts: responseParts });
+
+    // Segundo turno (sin herramientas) para la confirmación natural.
+    const second = await ai.models.generateContent({
+      model: MODEL,
+      contents,
+      config: { systemInstruction: AGENT_SYSTEM_INSTRUCTION, temperature: 0.5, maxOutputTokens: 400 }
+    });
+
+    return { ok: true, configured: true, text: (second.text || '').trim(), acciones };
+  } catch (error) {
+    console.error('[gemini] Error en el agente:', error.message);
+    return { ok: false, configured: true, text: 'Tuve un problema ejecutando esa acción. Intenta de nuevo.', acciones: [] };
+  }
+};
+
 module.exports = {
   MODEL,
   SYSTEM_INSTRUCTION,
   isConfigured,
   generateAssistantReply,
-  generateSkillTree
+  generateSkillTree,
+  runAssistantAgent
 };
