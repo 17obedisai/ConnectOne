@@ -461,6 +461,87 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* HERRAMIENTA DEFINITIVA — METODOLOGÍA */}
+      <section id="metodologia" className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <Badge className="bg-purple-600/30 text-purple-200 border border-purple-500/40 mb-4">
+              No es otra app de hábitos
+            </Badge>
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
+              La herramienta definitiva para
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+                volverte una mejor persona
+              </span>
+            </h2>
+            <p className="text-xl text-purple-200 max-w-3xl mx-auto">
+              ConnectONE no te da una lista de tareas más. Combina tres disciplinas probadas
+              en un solo sistema que se adapta a ti y evoluciona con tu progreso.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {[
+              {
+                icon: <Activity className="w-8 h-8" />,
+                title: 'Metodologías Ágiles',
+                gradient: 'from-cyan-500 to-blue-500',
+                description: 'Avanzas en ciclos cortos y medibles. Cada semana es un "sprint" con objetivos concretos, retrospectiva de tu progreso y ajuste continuo — el mismo marco que usan los equipos de alto rendimiento, aplicado a tu vida.'
+              },
+              {
+                icon: <Brain className="w-8 h-8" />,
+                title: 'Enfoque Profundo (Deep Work)',
+                gradient: 'from-purple-500 to-indigo-500',
+                description: 'Sesiones de concentración sin distracciones con temporizador Pomodoro integrado. Entrenas tu capacidad de foco como un músculo y proteges tu energía mental para lo que de verdad importa.'
+              },
+              {
+                icon: <Sparkles className="w-8 h-8" />,
+                title: 'Rutinas Personalizadas con IA',
+                gradient: 'from-pink-500 to-rose-500',
+                description: 'A partir de tu cuestionario inicial, la IA genera misiones y retos a tu medida según tus objetivos, nivel e intereses. Tu plan no es genérico: se construye —y se recalcula— alrededor de ti.'
+              }
+            ].map((pilar, index) => (
+              <motion.div
+                key={pilar.title}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+              >
+                <Card className="h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 border-purple-500/30">
+                  <CardContent className="p-8">
+                    <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${pilar.gradient} text-white mb-5`}>
+                      {pilar.icon}
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">{pilar.title}</h3>
+                    <p className="text-purple-200 leading-relaxed">{pilar.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-3xl p-8 text-center"
+          >
+            <p className="text-lg md:text-xl text-purple-100 max-w-4xl mx-auto">
+              <span className="font-bold text-white">El resultado:</span> un sistema que cruza
+              la constancia de las metodologías ágiles, la profundidad del deep work y la
+              inteligencia de las rutinas adaptativas. Pequeñas acciones diarias que,
+              acumuladas, transforman quién eres.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CÓMO FUNCIONA - 4 PASOS */}
       <section id="como-funciona" className="py-20 px-4 bg-gradient-to-b from-transparent via-purple-900/20 to-transparent">
         <div className="max-w-7xl mx-auto">

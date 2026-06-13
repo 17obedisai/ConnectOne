@@ -76,61 +76,61 @@ const QuestionnairePage = () => {
     },
     {
       id: 'main_goal',
-      question: '¿Qué aventura te emociona más?',
-      subtitle: 'Elige tu camino principal — personalizaremos cada misión a tu objetivo',
+      question: '¿Cuál es tu objetivo principal?',
+      subtitle: 'Elige tu enfoque central — adaptaremos tu plan y tus misiones a esta meta',
       type: 'single',
       pandaMood: 'excited',
       gradient: 'from-purple-500 to-pink-500',
       options: [
         {
           value: 'physical_wellness',
-          label: 'Conquistar mi Bienestar Físico',
+          label: 'Bienestar físico',
           icon: <Heart className="w-6 h-6" />,
-          description: 'Ejercicio, nutrición y energía diaria',
+          description: 'Ejercicio, nutrición y energía sostenida',
           color: 'from-red-500 to-pink-500'
         },
         {
           value: 'mental_wellness',
-          label: 'Dominar mi Mente',
+          label: 'Claridad y enfoque mental',
           icon: <Brain className="w-6 h-6" />,
-          description: 'Meditación, focus y claridad mental',
+          description: 'Meditación, concentración y gestión del estrés',
           color: 'from-purple-500 to-indigo-500'
         },
         {
           value: 'productivity',
-          label: 'Maximizar mi Productividad',
+          label: 'Productividad y disciplina',
           icon: <Zap className="w-6 h-6" />,
-          description: 'Hábitos, rutinas y metas claras',
+          description: 'Hábitos consistentes, rutinas y metas claras',
           color: 'from-yellow-500 to-orange-500'
         }
       ]
     },
     {
       id: 'challenges',
-      question: '¿Qué monstruos quieres derrotar?',
-      subtitle: 'Selecciona todos los que apliquen — cuantos más elijas, más relevantes serán tus misiones',
+      question: '¿Qué obstáculos quieres superar?',
+      subtitle: 'Selecciona todos los que apliquen — cuantos más indiques, más relevantes serán tus misiones',
       type: 'multiple',
       pandaMood: 'determined',
       gradient: 'from-blue-500 to-cyan-500',
       options: [
-        { value: 'procrastination', label: 'Procrastinación', icon: '⏰', description: 'El ladrón silencioso del tiempo' },
-        { value: 'social_media', label: 'Redes Sociales', icon: '📱', description: 'La trampa del scroll infinito' },
-        { value: 'low_energy', label: 'Baja Energía', icon: '🔋', description: 'El drenador de poder' },
-        { value: 'stress', label: 'Estrés', icon: '😰', description: 'El peso que carga el cuerpo y la mente' },
-        { value: 'planning', label: 'Desorganización', icon: '📋', description: 'El caos que frena el progreso' }
+        { value: 'procrastination', label: 'Procrastinación', icon: '⏰', description: 'Postergar tareas importantes' },
+        { value: 'social_media', label: 'Distracción digital', icon: '📱', description: 'Demasiado tiempo en redes y pantallas' },
+        { value: 'low_energy', label: 'Falta de energía', icon: '🔋', description: 'Cansancio y bajo rendimiento diario' },
+        { value: 'stress', label: 'Estrés y ansiedad', icon: '🧠', description: 'Carga mental difícil de gestionar' },
+        { value: 'planning', label: 'Desorganización', icon: '📋', description: 'Dificultad para planificar y priorizar' }
       ]
     },
     {
       id: 'activity_level',
-      question: '¿Cuál es tu nivel de poder actual?',
-      subtitle: 'Tu actividad física determina las misiones iniciales y el XP de arranque',
+      question: '¿Cuál es tu nivel de actividad física actual?',
+      subtitle: 'Esto define tus misiones iniciales y tu XP de arranque',
       type: 'single',
       pandaMood: 'athletic',
       gradient: 'from-green-500 to-emerald-500',
       options: [
         {
           value: 'sedentary',
-          label: 'Nivel 1: Principiante',
+          label: 'Sedentario',
           icon: <Coffee className="w-6 h-6" />,
           description: 'Poco o ningún ejercicio',
           xp: '+0 XP',
@@ -138,7 +138,7 @@ const QuestionnairePage = () => {
         },
         {
           value: 'lightly_active',
-          label: 'Nivel 2: Aprendiz',
+          label: 'Ligeramente activo',
           icon: <Sun className="w-6 h-6" />,
           description: '1-2 días de ejercicio por semana',
           xp: '+100 XP',
@@ -146,7 +146,7 @@ const QuestionnairePage = () => {
         },
         {
           value: 'active',
-          label: 'Nivel 3: Guerrero',
+          label: 'Activo',
           icon: <Activity className="w-6 h-6" />,
           description: '3-5 días de ejercicio por semana',
           xp: '+300 XP',
@@ -154,7 +154,7 @@ const QuestionnairePage = () => {
         },
         {
           value: 'very_active',
-          label: 'Nivel 4: Maestro',
+          label: 'Muy activo',
           icon: <Trophy className="w-6 h-6" />,
           description: '6-7 días de ejercicio por semana',
           xp: '+500 XP',
@@ -164,8 +164,8 @@ const QuestionnairePage = () => {
     },
     {
       id: 'nutrition_rating',
-      question: '¿Cómo está tu barra de salud?',
-      subtitle: 'Tu alimentación es tu combustible — sé honesto para obtener las misiones correctas',
+      question: '¿Cómo describirías tu alimentación actual?',
+      subtitle: 'Sé honesto — esto nos ayuda a recomendarte las misiones de nutrición correctas',
       type: 'nutrition',
       pandaMood: 'happy',
       gradient: 'from-orange-500 to-red-500',
@@ -206,18 +206,18 @@ const QuestionnairePage = () => {
     },
     {
       id: 'interests',
-      question: '¿Cuáles son tus intereses y habilidades?',
-      subtitle: 'Elige todos los que apliquen — personalizaremos tus misiones con lo que te apasiona',
+      question: '¿En qué áreas quieres crecer?',
+      subtitle: 'Selecciona todas las que apliquen — generaremos misiones y retos con IA enfocados en tus habilidades',
       type: 'multiple',
       pandaMood: 'cool',
       gradient: 'from-indigo-500 to-purple-500',
       options: [
-        { value: 'software', label: 'Desarrollo de Software', icon: '💻', description: 'Programación, tecnología y sistemas' },
-        { value: 'music', label: 'Música / Instrumentos', icon: '🎵', description: 'Tocar, crear o apreciar música' },
-        { value: 'languages', label: 'Idiomas', icon: '🌍', description: 'Aprender nuevas lenguas y culturas' },
-        { value: 'reading', label: 'Lectura', icon: '📚', description: 'Libros, artículos y conocimiento' },
-        { value: 'fitness', label: 'Fitness / Salud', icon: '🏋️', description: 'Ejercicio, nutrición y bienestar físico' },
-        { value: 'finance', label: 'Finanzas Personales', icon: '💰', description: 'Ahorro, inversiones y libertad financiera' }
+        { value: 'software', label: 'Desarrollo de Software', icon: '💻', description: 'Frontend, backend y arquitectura' },
+        { value: 'music', label: 'Producción Musical y Audio', icon: '🎚️', description: 'Logic Pro, Reaper, mezcla y mastering' },
+        { value: 'languages', label: 'Idiomas y Comunicación', icon: '🌍', description: 'Aprender lenguas y comunicar con impacto' },
+        { value: 'study', label: 'Hábitos de Estudio y Organización', icon: '📚', description: 'Aprendizaje efectivo y gestión del tiempo' },
+        { value: 'fitness', label: 'Fitness y Salud Física', icon: '🏋️', description: 'Entrenamiento, nutrición y descanso' },
+        { value: 'finance', label: 'Finanzas Personales', icon: '💰', description: 'Ahorro, inversión y libertad financiera' }
       ]
     }
   ];
