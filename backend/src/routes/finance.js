@@ -3,6 +3,60 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Transaction = require('../models/Transaction');
 const FinancialGoal = require('../models/FinancialGoal');
+const CategoriaFinanza = require('../models/CategoriaFinanza');
+
+// Categorías base que se siembran la primera vez.
+const CATEGORIAS_SEED = [
+  { nombre: 'Comida', tipo: 'gasto', emoji: '🍔' },
+  { nombre: 'Transporte', tipo: 'gasto', emoji: '🚗' },
+  { nombre: 'Equipos', tipo: 'gasto', emoji: '🎛️' },
+  { nombre: 'Educación', tipo: 'gasto', emoji: '🎓' },
+  { nombre: 'Suscripciones', tipo: 'gasto', emoji: '📺' },
+  { nombre: 'Ocio', tipo: 'gasto', emoji: '🎮' },
+  { nombre: 'Salud', tipo: 'gasto', emoji: '🩺' },
+  { nombre: 'Hogar', tipo: 'gasto', emoji: '🏠' },
+  { nombre: 'Salario', tipo: 'ingreso', emoji: '💼' },
+  { nombre: 'Freelance', tipo: 'ingreso', emoji: '💻' },
+  { nombre: 'Venta', tipo: 'ingreso', emoji: '🏷️' }
+];
+
+// ── CATEGORÍAS ──
+router.get('/categorias', auth, async (req, res) => {
+  try {
+    let cats = await CategoriaFinanza.find({ userId: req.user.id }).sort({ tipo: 1, nombre: 1 });
+    if (cats.length === 0) {
+      await CategoriaFinanza.insertMany(CATEGORIAS_SEED.map((c) => ({ ...c, userId: req.user.id })));
+      cats = await CategoriaFinanza.find({ userId: req.user.id }).sort({ tipo: 1, nombre: 1 });
+    }
+    res.json({ success: true, data: cats });
+  } catch (error) {
+    console.error('[finance/categorias GET]', error);
+    res.status(500).json({ success: false, message: 'Error obteniendo categorías' });
+  }
+});
+
+router.post('/categorias', auth, async (req, res) => {
+  try {
+    const { nombre, tipo, emoji } = req.body;
+    if (!nombre || !nombre.trim()) return res.status(400).json({ success: false, message: 'El nombre es obligatorio' });
+    if (!['ingreso', 'gasto'].includes(tipo)) return res.status(400).json({ success: false, message: 'Tipo inválido' });
+    const cat = await CategoriaFinanza.create({ userId: req.user.id, nombre: nombre.trim(), tipo, emoji: emoji || '🏷️' });
+    res.status(201).json({ success: true, data: cat });
+  } catch (error) {
+    console.error('[finance/categorias POST]', error);
+    res.status(500).json({ success: false, message: 'Error creando la categoría' });
+  }
+});
+
+router.delete('/categorias/:id', auth, async (req, res) => {
+  try {
+    const del = await CategoriaFinanza.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!del) return res.status(404).json({ success: false, message: 'Categoría no encontrada' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error eliminando la categoría' });
+  }
+});
 
 // Rango [inicio, fin) del mes indicado (YYYY-MM) o del mes actual.
 const rangoMes = (mes) => {

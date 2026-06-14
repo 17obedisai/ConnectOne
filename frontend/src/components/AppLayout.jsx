@@ -253,7 +253,7 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       <div className="p-2 sm:p-3 space-y-1 sm:space-y-2 border-t border-purple-500/30">
         <Button 
           variant="ghost" 
-          onClick={() => { navigate('/settings'); if (onLinkClick) onLinkClick(); }} 
+          onClick={() => { navigate('/profile'); if (onLinkClick) onLinkClick(); }}
           className="w-full justify-start text-purple-200 hover:text-white hover:bg-purple-800/40 h-9 sm:h-10 text-sm sm:text-base"
         >
           <Settings className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />

@@ -19,7 +19,6 @@ import AppLayout from '@/components/AppLayout';
 import InstallPWA from '@/components/InstallPWA';
 import DashboardPage from '@/pages/DashboardPage';
 import ProfilePage from '@/pages/ProfilePage';
-import SettingsPage from '@/pages/SettingsPage';
 import MissionsPage from '@/pages/MissionsPage';
 import MissionPage from '@/pages/MissionPage';
 import LevelsPage from '@/pages/LevelsPage';
@@ -70,7 +69,8 @@ const AppRoutes = () => {
         <Route path="/seguimiento" element={<SeguimientoPage />} />
         <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        {/* Configuración unificada dentro del Perfil */}
+        <Route path="/settings" element={<Navigate to="/profile" replace />} />
       </Route>
       
       {/* Ruta 404 - debe ir al final */}

@@ -39,6 +39,32 @@ router.get('/profile', auth, async (req, res) => {
     }
     });
 
+    // Actualizar perfil unificado (datos personales + skin + objetivos/intereses + preferencias)
+    router.put('/profile', auth, async (req, res) => {
+    try {
+        const { nombre, bio, ciudad, avatarSkin, objetivos, intereses, notificaciones } = req.body;
+        const usuario = await User.findById(req.user.id);
+        if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+        if (nombre !== undefined && nombre.trim()) usuario.nombre = nombre.trim();
+        if (bio !== undefined) usuario.bio = bio;
+        if (ciudad !== undefined) usuario.ciudad = ciudad;
+        // La skin solo puede ser un nivel ya alcanzado.
+        if (avatarSkin !== undefined) usuario.avatarSkin = Math.min(Math.max(parseInt(avatarSkin, 10) || 1, 1), usuario.nivel);
+        if (Array.isArray(objetivos)) usuario.perfilInicial.objetivos = objetivos;
+        if (Array.isArray(intereses)) usuario.perfilInicial.intereses = intereses;
+        if (notificaciones !== undefined) usuario.preferencias.notificaciones = !!notificaciones;
+
+        await usuario.save();
+        const limpio = usuario.toObject();
+        delete limpio.password;
+        res.json({ success: true, data: limpio });
+    } catch (error) {
+        console.error('[users/profile PUT]', error);
+        res.status(500).json({ message: 'Error actualizando el perfil' });
+    }
+    });
+
     // Actualizar nivel y experiencia
     router.put('/level-up', auth, async (req, res) => {
     try {

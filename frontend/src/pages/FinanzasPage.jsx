@@ -17,9 +17,8 @@ const fmt = (n) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
     .format(Number(n) || 0);
 
-const GASTO_CATS = ['comida', 'transporte', 'equipos', 'educacion', 'suscripciones', 'ocio', 'salud', 'hogar', 'otro'];
-const INGRESO_CATS = ['salario', 'freelance', 'venta', 'otro'];
 const GOAL_CATS = { equipo: '🎛️', plugin: '🎚️', hardware: '🖥️', educacion: '🎓', software: '💿', otro: '🎯' };
+const EMOJIS = ['🏷️', '🍔', '🚗', '🏠', '🎮', '🩺', '🎓', '📺', '💼', '💻', '🎁', '✈️', '👕', '⚡', '🐾', '☕'];
 
 const FinanzasPage = () => {
   const { toast } = useToast();
@@ -27,25 +26,47 @@ const FinanzasPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [txForm, setTxForm] = useState({ tipo: 'gasto', monto: '', categoria: 'comida', descripcion: '' });
+  const [txForm, setTxForm] = useState({ tipo: 'gasto', monto: '', categoria: '', descripcion: '' });
   const [goalForm, setGoalForm] = useState({ nombre: '', montoObjetivo: '', categoria: 'equipo', fechaObjetivo: '' });
   const [aportes, setAportes] = useState({});
+  const [categorias, setCategorias] = useState([]);
+  const [catForm, setCatForm] = useState({ nombre: '', tipo: 'gasto', emoji: '🏷️' });
+  const [showCats, setShowCats] = useState(false);
 
   const loadFinance = async () => {
     try {
-      const [s, t, g] = await Promise.allSettled([
+      const [s, t, g, c] = await Promise.allSettled([
         api.get('/finance/summary'),
         api.get('/finance/transactions'),
-        api.get('/finance/goals')
+        api.get('/finance/goals'),
+        api.get('/finance/categorias')
       ]);
       if (s.status === 'fulfilled') setSummary(s.value.data?.data || summary);
       if (t.status === 'fulfilled') setTransactions(t.value.data?.data || []);
       if (g.status === 'fulfilled') setGoals(g.value.data?.data || []);
+      if (c.status === 'fulfilled') {
+        const cats = c.value.data?.data || [];
+        setCategorias(cats);
+        // Selecciona la primera categoría de gasto por defecto.
+        setTxForm((f) => ({ ...f, categoria: f.categoria || (cats.find((x) => x.tipo === 'gasto')?.nombre || '') }));
+      }
     } catch (e) {
       console.error('Error cargando finanzas:', e.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const addCategoria = async () => {
+    if (!catForm.nombre.trim()) return;
+    try {
+      const { data } = await api.post('/finance/categorias', catForm);
+      setCategorias((p) => [...p, data.data]);
+      setCatForm({ nombre: '', tipo: catForm.tipo, emoji: '🏷️' });
+    } catch (e) { toast({ title: 'Error', description: e.response?.data?.message || 'No se pudo crear.', variant: 'destructive' }); }
+  };
+  const delCategoria = async (id) => {
+    try { await api.delete(`/finance/categorias/${id}`); setCategorias((p) => p.filter((c) => c._id !== id)); } catch (e) { /* noop */ }
   };
 
   useEffect(() => { loadFinance(); }, []);
@@ -109,7 +130,7 @@ const FinanzasPage = () => {
   };
 
   const categoriasGasto = Object.entries(summary.porCategoria || {}).sort((a, b) => b[1] - a[1]);
-  const catActual = txForm.tipo === 'gasto' ? GASTO_CATS : INGRESO_CATS;
+  const catActual = categorias.filter((c) => c.tipo === txForm.tipo);
 
   return (
     <>
@@ -169,7 +190,7 @@ const FinanzasPage = () => {
                       {['gasto', 'ingreso'].map((tipo) => (
                         <button
                           key={tipo}
-                          onClick={() => setTxForm((f) => ({ ...f, tipo, categoria: tipo === 'gasto' ? 'comida' : 'salario' }))}
+                          onClick={() => setTxForm((f) => ({ ...f, tipo, categoria: categorias.find((c) => c.tipo === tipo)?.nombre || '' }))}
                           className={`flex-1 h-9 rounded-lg text-sm font-bold border transition-all capitalize
                             ${txForm.tipo === tipo
                               ? tipo === 'gasto' ? 'bg-red-500/20 border-red-500/40 text-red-200' : 'bg-green-500/20 border-green-500/40 text-green-200'
@@ -191,11 +212,42 @@ const FinanzasPage = () => {
                       <select
                         value={txForm.categoria}
                         onChange={(e) => setTxForm((f) => ({ ...f, categoria: e.target.value }))}
-                        className="h-9 rounded-lg bg-slate-800 border border-white/10 text-white text-sm px-2 capitalize"
+                        className="h-9 rounded-lg bg-slate-800 border border-white/10 text-white text-sm px-2"
                       >
-                        {catActual.map((c) => <option key={c} value={c}>{c}</option>)}
+                        {catActual.map((c) => <option key={c._id} value={c.nombre}>{c.emoji} {c.nombre}</option>)}
                       </select>
                     </div>
+                    {/* Gestionar categorías */}
+                    <button onClick={() => setShowCats((s) => !s)} className="text-xs text-purple-300/70 hover:text-purple-200">
+                      {showCats ? '− Ocultar categorías' : '+ Gestionar categorías'}
+                    </button>
+                    <AnimatePresence>
+                      {showCats && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <select value={catForm.emoji} onChange={(e) => setCatForm((f) => ({ ...f, emoji: e.target.value }))} className="h-8 rounded-lg bg-slate-800 border border-white/10 text-white text-sm px-1">
+                                {EMOJIS.map((e) => <option key={e} value={e}>{e}</option>)}
+                              </select>
+                              <Input value={catForm.nombre} onChange={(e) => setCatForm((f) => ({ ...f, nombre: e.target.value }))} onKeyDown={(e) => e.key === 'Enter' && addCategoria()} placeholder="Nueva categoría" className="h-8 flex-1 min-w-[7rem] bg-white/5 border-white/10 text-white text-sm" />
+                              <select value={catForm.tipo} onChange={(e) => setCatForm((f) => ({ ...f, tipo: e.target.value }))} className="h-8 rounded-lg bg-slate-800 border border-white/10 text-white text-sm px-1">
+                                <option value="gasto">Gasto</option>
+                                <option value="ingreso">Ingreso</option>
+                              </select>
+                              <Button onClick={addCategoria} className="h-8 w-8 p-0 bg-purple-600 hover:bg-purple-500 shrink-0"><Plus className="w-4 h-4" /></Button>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {categorias.map((c) => (
+                                <span key={c._id} className="text-xs bg-white/5 border border-white/10 rounded-full pl-2 pr-1 py-1 text-purple-200 flex items-center gap-1">
+                                  {c.emoji} {c.nombre}
+                                  <button onClick={() => delCategoria(c._id)} className="text-purple-300/40 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                     <div className="flex gap-2">
                       <Input
                         value={txForm.descripcion}

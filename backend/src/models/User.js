@@ -31,6 +31,13 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    // Perfil editable por el usuario
+    bio: { type: String, default: '' },
+    ciudad: { type: String, default: '' },
+    avatarSkin: { type: Number, default: 1 }, // nivel de skin elegida (panda-level-N)
+    preferencias: {
+        notificaciones: { type: Boolean, default: true }
+    },
     // Respuestas del cuestionario inicial
     perfilInicial: {
         objetivos: [String],
