@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import api from '@/services/api';
+import { pushSupported, isIOS, isStandalone, getPushSubscription, subscribePush, unsubscribePush } from '@/lib/push';
 
 const INTERESES = [
   { value: 'software', label: 'Software', emoji: '💻' },
@@ -44,6 +45,44 @@ const ProfilePage = () => {
   const [objetivo, setObjetivo] = useState('');
   const [intereses, setIntereses] = useState([]);
   const [notificaciones, setNotificaciones] = useState(true);
+  const [pushOn, setPushOn] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => { (async () => { try { setPushOn(!!(await getPushSubscription())); } catch (e) { /* noop */ } })(); }, []);
+
+  const togglePush = async () => {
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await unsubscribePush();
+        setPushOn(false); setNotificaciones(false);
+        api.put('/users/profile', { notificaciones: false }).catch(() => {});
+        toast({ title: 'Notificaciones desactivadas' });
+      } else {
+        await subscribePush();
+        setPushOn(true); setNotificaciones(true);
+        api.put('/users/profile', { notificaciones: true }).catch(() => {});
+        toast({ title: '🔔 Notificaciones activadas', description: 'Te avisaremos de tus recordatorios.' });
+      }
+    } catch (e) {
+      const m = {
+        unsupported: 'Tu navegador no soporta notificaciones.',
+        'no-sw': 'Disponible en la app publicada/instalada (no en local).',
+        denied: 'Permiso denegado. Actívalo en los ajustes del navegador.',
+        'not-configured': 'El servidor aún no tiene configuradas las claves de push.'
+      }[e.message] || 'No se pudo activar.';
+      toast({ title: 'Notificaciones', description: m, variant: 'destructive' });
+    } finally { setPushBusy(false); }
+  };
+
+  const probarPush = async () => {
+    try {
+      const { data } = await api.post('/push/test');
+      toast({ title: data.enviados ? '📩 Notificación enviada' : 'Sin dispositivos', description: data.enviados ? 'Revisa tu notificación.' : 'Activa primero las notificaciones.' });
+    } catch (e) {
+      toast({ title: 'Error', description: e.response?.data?.message || 'No se pudo enviar.', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -205,13 +244,18 @@ const ProfilePage = () => {
             <Card className="bg-gradient-to-br from-purple-800/30 to-indigo-800/30 border-purple-500/30">
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2"><Bell className="w-4 h-4 text-purple-300" /><span className="text-white text-sm">Notificaciones</span></div>
-                  <button onClick={() => { setNotificaciones((v) => !v); api.put('/users/profile', { notificaciones: !notificaciones }).catch(() => {}); }}
-                    className={`w-12 h-6 rounded-full transition-all relative ${notificaciones ? 'bg-purple-600' : 'bg-white/10'}`}>
-                    <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${notificaciones ? 'left-[26px]' : 'left-0.5'}`} />
+                  <div className="flex items-center gap-2"><Bell className="w-4 h-4 text-purple-300" /><span className="text-white text-sm">Notificaciones push</span></div>
+                  <button onClick={togglePush} disabled={pushBusy}
+                    className={`w-12 h-6 rounded-full transition-all relative ${pushOn ? 'bg-purple-600' : 'bg-white/10'} disabled:opacity-60`}>
+                    {pushBusy
+                      ? <Loader2 className="w-4 h-4 animate-spin text-white absolute top-1 left-4" />
+                      : <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${pushOn ? 'left-[26px]' : 'left-0.5'}`} />}
                   </button>
                 </div>
-                <div className="text-sm text-purple-300/70">Cuenta: <span className="text-purple-200">{perfil?.email}</span></div>
+                {pushOn && <button onClick={probarPush} className="text-xs text-purple-300/70 hover:text-purple-200 text-left">Enviar notificación de prueba →</button>}
+                {!pushSupported() && <p className="text-xs text-amber-300/70">Tu navegador no soporta notificaciones.</p>}
+                {pushSupported() && isIOS() && !isStandalone() && <p className="text-xs text-amber-300/70">En iPhone: instala la app (Compartir → Añadir a inicio) y vuelve aquí para activarlas.</p>}
+                <div className="text-sm text-purple-300/70 pt-1">Cuenta: <span className="text-purple-200">{perfil?.email}</span></div>
               </CardContent>
             </Card>
 

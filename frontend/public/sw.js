@@ -1,6 +1,6 @@
 /* Service Worker de ConnectONE — instalable + offline shell.
    Seguro: solo gestiona peticiones del MISMO origen (nunca la API en otro dominio). */
-const VERSION = 'connectone-v1';
+const VERSION = 'connectone-v2';
 const PRECACHE = `precache-${VERSION}`;
 const RUNTIME = `runtime-${VERSION}`;
 const APP_SHELL = ['/', '/index.html'];
@@ -53,6 +53,42 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => cached);
       return cached || network;
+    })
+  );
+});
+
+// ── Web Push: muestra la notificación recibida ──
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { title: 'ConnectONE', body: event.data ? event.data.text() : '' };
+  }
+  const title = data.title || 'ConnectONE';
+  const options = {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    vibrate: [80, 40, 80],
+    data: { url: data.url || '/dashboard' }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Al tocar la notificación: enfoca la app (o la abre) en la URL indicada.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/dashboard';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if ('focus' in c) {
+          if ('navigate' in c) c.navigate(url);
+          return c.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
     })
   );
 });

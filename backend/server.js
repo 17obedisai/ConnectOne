@@ -127,6 +127,7 @@ app.use('/api/proyectos', require('./src/routes/proyectos'));
 app.use('/api/libros', require('./src/routes/libros'));
 app.use('/api/finance', require('./src/routes/finance'));
 app.use('/api/overview', require('./src/routes/overview'));
+app.use('/api/push', require('./src/routes/push'));
 app.use('/api/ai', aiLimiter, require('./src/routes/ai'));
 
 // Health check

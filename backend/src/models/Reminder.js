@@ -17,6 +17,7 @@ const reminderSchema = new mongoose.Schema({
   },
   fechaLimite: { type: Date, default: null },
   completado: { type: Boolean, default: false },
+  notificado: { type: Boolean, default: false }, // ¿ya se envió push de este recordatorio?
   notas: { type: String, default: '' }
 }, { timestamps: true });
 
