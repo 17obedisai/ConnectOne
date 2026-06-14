@@ -26,9 +26,9 @@ const LandingPage = () => {
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  // Partículas flotantes de fondo
+  // Partículas flotantes de fondo (menos en móvil para mejor rendimiento)
   const [floatingElements] = useState(
-    Array.from({ length: 30 }, (_, i) => ({
+    Array.from({ length: (typeof window !== 'undefined' && window.innerWidth < 640) ? 10 : 30 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,

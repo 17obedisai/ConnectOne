@@ -65,9 +65,24 @@
     --ring: 272 72% 65%;
   }
 
+  html {
+    /* Evita scroll horizontal accidental en móvil */
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent; /* sin flash gris al tocar */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Inputs nunca por debajo de 16px en móvil: evita el auto-zoom de iOS al enfocar */
+  @media (max-width: 640px) {
+    input, select, textarea { font-size: 16px; }
   }
   
   h1 {

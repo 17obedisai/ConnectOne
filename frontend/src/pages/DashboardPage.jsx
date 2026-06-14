@@ -21,14 +21,7 @@ import {
 } from 'lucide-react';
 
 // Importar utilidades del dashboard
-import {
-  getWeeklyChallengesForUser,
-  getChallengeProgress,
-  updateChallengeProgress,
-  getRecommendedMissions,
-  TimerPersistence,
-  formatTime
-} from '@/lib/dashboardUtils';
+import { TimerPersistence, formatTime } from '@/lib/dashboardUtils';
 
 // Centro de Comando (Pilar 1) + Motor de IA (Pilar 5)
 import CommandCenter from '@/components/dashboard/CommandCenter';
@@ -47,10 +40,7 @@ const DashboardPage = () => {
   const { toast } = useToast();
   
   const [greeting, setGreeting] = useState('');
-  const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [toolModal, setToolModal] = useState(null);
-  const [weeklyChallenges, setWeeklyChallenges] = useState([]);
-  const [misionesRecomendadas, setMisionesRecomendadas] = useState([]);
   // Contexto en vivo (energía, sueño, tareas) que el Centro de Comando comparte con la IA.
   const [aiContext, setAiContext] = useState({});
   
@@ -107,21 +97,6 @@ const DashboardPage = () => {
     if (hour < 12) setGreeting('Buenos días');
     else if (hour < 18) setGreeting('Buenas tardes');
     else setGreeting('Buenas noches');
-
-    // Cargar desafíos semanales (solo 2 de 6 pool)
-    if (user?.id) {
-      const userChallenges = getWeeklyChallengesForUser(user.id);
-      const challengesWithProgress = userChallenges.map(challenge => ({
-        ...challenge,
-        progreso: getChallengeProgress(challenge.id, user.id),
-        dias: 7 - Math.floor((Date.now() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
-      }));
-      setWeeklyChallenges(challengesWithProgress);
-    }
-
-    // Cargar misiones recomendadas (conectadas con missionsData)
-    const recommended = getRecommendedMissions();
-    setMisionesRecomendadas(recommended);
 
     // Restaurar timers persistentes
     restoreTimers();
@@ -537,16 +512,6 @@ const DashboardPage = () => {
   // ============================================
   // NAVEGACIÓN A MISIONES
   // ============================================
-
-  const handleMissionClick = (mission) => {
-    // Navegar a /missions y pasar el ID para abrir automáticamente
-    navigate('/missions', { 
-      state: { 
-        openMissionId: mission.id,
-        autoOpen: true
-      } 
-    });
-  };
 
   // ============================================
   // RENDER - PARTE PRINCIPAL
@@ -1213,129 +1178,6 @@ const DashboardPage = () => {
           </motion.div>
         )}
 
-        {/* Modal Desafío Semanal Detallado */}
-        {selectedChallenge && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setSelectedChallenge(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={e => e.stopPropagation()}
-              className="bg-gradient-to-br from-purple-900/95 to-indigo-900/95 rounded-2xl p-6 max-w-lg w-full border border-purple-500/30 shadow-2xl"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className={`text-6xl p-4 rounded-2xl bg-gradient-to-br ${selectedChallenge.color} shadow-xl`}>
-                  {selectedChallenge.emoji}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-white mb-1">
-                    {selectedChallenge.titulo}
-                  </h3>
-                  <p className="text-purple-200 text-sm">
-                    {selectedChallenge.descripcion}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSelectedChallenge(null)}
-                  className="text-white hover:bg-white/10"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-purple-200 font-medium">Progreso</span>
-                  <span className="text-white font-bold text-lg">
-                    {selectedChallenge.progreso}/{selectedChallenge.meta}
-                  </span>
-                </div>
-                <Progress 
-                  value={(selectedChallenge.progreso / selectedChallenge.meta) * 100}
-                  className="h-4 mb-2"
-                />
-                <div className="flex justify-between text-sm text-purple-300">
-                  <span>{Math.round((selectedChallenge.progreso / selectedChallenge.meta) * 100)}% completado</span>
-                  <span>{selectedChallenge.dias} días restantes</span>
-                </div>
-              </div>
-
-              {selectedChallenge.tareas && (
-                <div className="mb-6">
-                  <h4 className="text-white font-bold mb-3 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-purple-400" />
-                    Tareas del desafío:
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedChallenge.tareas.map((tarea, i) => (
-                      <motion.div 
-                        key={i}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="flex items-center gap-3 bg-purple-800/30 p-3 rounded-lg border border-purple-500/20"
-                      >
-                        {tarea.completado ? (
-                          <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-purple-400 flex-shrink-0" />
-                        )}
-                        <span className={`${tarea.completado ? 'text-green-400 line-through' : 'text-white'} text-sm`}>
-                          {tarea.nombre}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedChallenge.recompensas && (
-                <div className="mb-6">
-                  <h4 className="text-white font-bold mb-3 flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-yellow-400" />
-                    Recompensas al completar:
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedChallenge.recompensas.map((recompensa, i) => (
-                      <Badge 
-                        key={i} 
-                        className="bg-purple-700 text-white px-3 py-1 text-sm"
-                      >
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        {recompensa}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-purple-900/30 rounded-lg p-4 border border-purple-500/20 mb-4">
-                <p className="text-purple-200 text-sm flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                  <span>
-                    Gana <span className="font-bold text-yellow-400">{selectedChallenge.xp} XP</span> al completar
-                  </span>
-                </p>
-              </div>
-
-              <Button
-                onClick={() => setSelectedChallenge(null)}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
-                size="lg"
-              >
-                Entendido
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
       </AnimatePresence>
     </>
   );

@@ -20,8 +20,6 @@ import InstallPWA from '@/components/InstallPWA';
 import DashboardPage from '@/pages/DashboardPage';
 import ProfilePage from '@/pages/ProfilePage';
 import MissionsPage from '@/pages/MissionsPage';
-import MissionPage from '@/pages/MissionPage';
-import LevelsPage from '@/pages/LevelsPage';
 import SkillTreePage from '@/pages/SkillTreePage';
 import FinanzasPage from '@/pages/FinanzasPage';
 import NotasPage from '@/pages/NotasPage';
@@ -59,7 +57,6 @@ const AppRoutes = () => {
       <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
         <Route path="/onboarding" element={<QuestionnairePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/levels" element={<LevelsPage />} />
         <Route path="/missions" element={<MissionsPage />} />
         <Route path="/skilltree" element={<SkillTreePage />} />
         <Route path="/finanzas" element={<FinanzasPage />} />
@@ -67,7 +64,6 @@ const AppRoutes = () => {
         <Route path="/academia" element={<AcademiaPage />} />
         <Route path="/academia/:id" element={<CursoPage />} />
         <Route path="/seguimiento" element={<SeguimientoPage />} />
-        <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         {/* Configuración unificada dentro del Perfil */}
         <Route path="/settings" element={<Navigate to="/profile" replace />} />

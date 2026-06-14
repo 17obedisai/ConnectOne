@@ -336,7 +336,10 @@ const AppLayout = () => {
       {/* Contenedor principal */}
       <div className="flex-1 lg:ml-64 xl:ml-72 flex flex-col min-h-screen">
         {/* Header - SIEMPRE VISIBLE EN MÓVIL */}
-        <header className="sticky top-0 h-14 sm:h-16 bg-slate-900/95 backdrop-blur-xl border-b border-purple-500/20 z-50 flex items-center justify-between px-3 sm:px-4 shadow-lg">
+        <header
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+          className="sticky top-0 min-h-[3.5rem] sm:min-h-16 bg-slate-900/95 backdrop-blur-xl border-b border-purple-500/20 z-50 flex items-center justify-between px-3 sm:px-4 py-2 shadow-lg"
+        >
           {/* Botón hamburguesa - SOLO en móvil */}
           <Button
             variant="ghost"

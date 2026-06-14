@@ -51,7 +51,8 @@ const InstallPWA = () => {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 60 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] w-[92%] max-w-sm"
+          style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+          className="fixed left-1/2 -translate-x-1/2 z-[200] w-[92%] max-w-sm"
         >
           <div className="bg-slate-900/95 backdrop-blur-xl border border-purple-500/30 rounded-2xl shadow-2xl p-4 flex items-center gap-3">
             <img src="/icons/icon-192.png" alt="ConnectONE" className="w-11 h-11 rounded-xl shrink-0" />
