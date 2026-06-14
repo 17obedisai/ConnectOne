@@ -16,6 +16,7 @@ import NotFoundPage from '@/pages/NotFoundPage';
 
 // Páginas protegidas
 import AppLayout from '@/components/AppLayout';
+import InstallPWA from '@/components/InstallPWA';
 import DashboardPage from '@/pages/DashboardPage';
 import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -92,6 +93,7 @@ function App() {
               <div className="min-h-screen bg-background text-foreground">
                 <AppRoutes />
                 <Toaster />
+                <InstallPWA />
               </div>
             </DataProvider>
           </Router>
