@@ -10,7 +10,25 @@ const Transaction = require('../models/Transaction');
 const JournalEntry = require('../models/JournalEntry');
 const Note = require('../models/Note');
 const Reto = require('../models/Reto');
-const { isConfigured, generateAssistantReply, runAssistantAgent } = require('../services/gemini');
+const { isConfigured, generateAssistantReply, runAssistantAgent, generateDayPlan } = require('../services/gemini');
+
+// Reúne el contexto de HOY del usuario (plan, hábitos, retos) para la IA.
+const contextoDeHoy = async (userId) => {
+  const fecha = hoy();
+  const [plan, retos] = await Promise.all([
+    DailyFocus.findOne({ userId, fecha }),
+    Reto.find({ userId, completado: false }).limit(5).select('titulo')
+  ]);
+  return {
+    energia: plan?.energia,
+    horasSueno: plan?.horasSueno,
+    tareasFoco: (plan?.tareas || []).filter((t) => !t.completada).map((t) => t.texto),
+    agendaHoy: (plan?.agenda || []).map((b) => `${b.inicio}${b.fin ? '-' + b.fin : ''} ${b.titulo}`),
+    habitosHoy: (plan?.habitos || []).map((h) => h.nombre),
+    retosPendientes: retos.map((r) => r.titulo),
+    plan
+  };
+};
 
 const hoy = () => new Date().toISOString().slice(0, 10);
 const esFecha = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -211,20 +229,26 @@ router.post('/assistant', auth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'El mensaje es obligatorio' });
     }
 
-    const [usuario, cuestionario] = await Promise.all([
+    const [usuario, cuestionario, hoyCtx] = await Promise.all([
       User.findById(req.user.id).select('nombre nivel perfilInicial'),
-      Questionnaire.findOne({ userId: req.user.id }).select('interests')
+      Questionnaire.findOne({ userId: req.user.id }).select('interests main_goal'),
+      contextoDeHoy(req.user.id)
     ]);
 
+    // Contexto rico: datos reales de hoy (del servidor) + lo efímero del cliente.
     const mergedContext = {
       fechaActual: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'full', timeStyle: 'short' }),
       nombre: usuario?.nombre,
       nivel: usuario?.nivel,
+      objetivo: cuestionario?.main_goal || (usuario?.perfilInicial?.objetivos || [])[0],
       intereses: cuestionario?.interests || usuario?.perfilInicial?.intereses || [],
-      energia: context.energia,
-      horasSueno: context.horasSueno,
+      energia: hoyCtx.energia ?? context.energia,
+      horasSueno: hoyCtx.horasSueno ?? context.horasSueno,
       minutosLibres: context.minutosLibres,
-      tareasFoco: Array.isArray(context.tareasFoco) ? context.tareasFoco.slice(0, 5) : undefined
+      tareasFoco: hoyCtx.tareasFoco?.length ? hoyCtx.tareasFoco.slice(0, 5) : (Array.isArray(context.tareasFoco) ? context.tareasFoco.slice(0, 5) : undefined),
+      agendaHoy: hoyCtx.agendaHoy,
+      habitosHoy: hoyCtx.habitosHoy,
+      retosPendientes: hoyCtx.retosPendientes
     };
 
     const result = await runAssistantAgent({
@@ -244,6 +268,53 @@ router.post('/assistant', auth, async (req, res) => {
   } catch (error) {
     console.error('[ai/assistant]', error);
     res.status(500).json({ success: false, message: 'Error en el asistente de IA' });
+  }
+});
+
+// POST /api/ai/plan-dia — Energiko ARMA el día: rutina, recomendaciones y (opcional) agenda.
+router.post('/plan-dia', auth, async (req, res) => {
+  try {
+    const fecha = hoy();
+    const [usuario, cuestionario, hoyCtx] = await Promise.all([
+      User.findById(req.user.id).select('nombre perfilInicial'),
+      Questionnaire.findOne({ userId: req.user.id }).select('interests main_goal'),
+      contextoDeHoy(req.user.id)
+    ]);
+
+    const context = {
+      fechaActual: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'full', timeStyle: 'short' }),
+      nombre: usuario?.nombre,
+      objetivo: cuestionario?.main_goal || (usuario?.perfilInicial?.objetivos || [])[0],
+      intereses: cuestionario?.interests || usuario?.perfilInicial?.intereses || [],
+      energia: hoyCtx.energia,
+      horasSueno: hoyCtx.horasSueno,
+      tareasFoco: hoyCtx.tareasFoco,
+      retosPendientes: hoyCtx.retosPendientes,
+      preferencias: req.body?.preferencias
+    };
+
+    const result = await generateDayPlan({ context });
+    if (!result.ok || !result.plan) {
+      return res.status(result.configured ? 502 : 503).json({
+        success: false,
+        message: result.configured ? 'No pude armar tu día. Intenta de nuevo.' : 'El motor de IA no está configurado.'
+      });
+    }
+
+    // Reemplaza la agenda de hoy con la rutina propuesta y guarda el resumen.
+    const plan = await DailyFocus.findOneAndUpdate(
+      { userId: req.user.id, fecha },
+      {
+        $set: { agenda: result.plan.bloques, resumenIA: result.plan.resumen, recomendaciones: result.plan.recomendaciones },
+        $setOnInsert: { userId: req.user.id, fecha }
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    res.json({ success: true, data: { ...result.plan, agenda: plan.agenda } });
+  } catch (error) {
+    console.error('[ai/plan-dia]', error);
+    res.status(500).json({ success: false, message: 'Error armando el día' });
   }
 });
 

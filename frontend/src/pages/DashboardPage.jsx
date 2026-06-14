@@ -33,7 +33,8 @@ import {
 // Centro de Comando (Pilar 1) + Motor de IA (Pilar 5)
 import CommandCenter from '@/components/dashboard/CommandCenter';
 import GeminiAssistant from '@/components/dashboard/GeminiAssistant';
-// Bloque B: vista ejecutiva, cierre de día y calendario interno
+// Mi Día (Jarvis) + Bloque B: vista ejecutiva, cierre de día y calendario interno
+import MiDia from '@/components/dashboard/MiDia';
 import ExecutiveSummary from '@/components/dashboard/ExecutiveSummary';
 import CierreDelDia from '@/components/dashboard/CierreDelDia';
 import CalendarioMes from '@/components/dashboard/CalendarioMes';
@@ -560,6 +561,11 @@ const DashboardPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
         <div className="max-w-7xl mx-auto space-y-6">
           
+          {/* MI DÍA (Jarvis) — lo primero al abrir */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <MiDia />
+          </motion.div>
+
           {/* Header Principal */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}

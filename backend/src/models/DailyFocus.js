@@ -42,7 +42,11 @@ const dailyFocusSchema = new mongoose.Schema({
       titulo: String,
       tipo: { type: String, enum: ['trabajo', 'estudio', 'descanso', 'fitness'], default: 'trabajo' }
     }
-  ]
+  ],
+
+  // "Mi Día": resumen y recomendaciones generados por Energiko al armar el día.
+  resumenIA: { type: String, default: '' },
+  recomendaciones: [String]
 }, { timestamps: true });
 
 // Un único documento por usuario y día.

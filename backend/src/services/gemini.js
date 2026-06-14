@@ -58,8 +58,18 @@ const buildContextBlock = (context = {}) => {
   if (Array.isArray(context.intereses) && context.intereses.length) {
     lines.push(`Intereses/áreas: ${context.intereses.join(', ')}`);
   }
+  if (context.objetivo) lines.push(`Objetivo principal: ${context.objetivo}`);
   if (Array.isArray(context.tareasFoco) && context.tareasFoco.length) {
     lines.push(`Tareas críticas del día: ${context.tareasFoco.join(' | ')}`);
+  }
+  if (Array.isArray(context.agendaHoy) && context.agendaHoy.length) {
+    lines.push(`Agenda de hoy: ${context.agendaHoy.join(' | ')}`);
+  }
+  if (Array.isArray(context.habitosHoy) && context.habitosHoy.length) {
+    lines.push(`Hábitos de hoy: ${context.habitosHoy.join(', ')}`);
+  }
+  if (Array.isArray(context.retosPendientes) && context.retosPendientes.length) {
+    lines.push(`Retos pendientes: ${context.retosPendientes.slice(0, 5).join(' | ')}`);
   }
   if (!lines.length) return '';
   return `\n\n[CONTEXTO DEL USUARIO]\n${lines.join('\n')}`;
@@ -300,6 +310,58 @@ Responde en español.`;
   }
 };
 
+// "Mi Día": Energiko arma la rutina del día como un asistente personal (Jarvis sin voz).
+const generateDayPlan = async ({ context = {} }) => {
+  const ai = getClient();
+  if (!ai) return { ok: false, configured: false, plan: null };
+
+  const prompt = `Eres el asistente personal del usuario. Arma su DÍA de hoy como un plan claro y realista,
+tipo "Jarvis": una rutina con bloques de tiempo, qué entrenar, qué comer (general y saludable),
+y recomendaciones. Usa su contexto.${buildContextBlock(context)}
+
+Reglas:
+- Crea entre 4 y 7 bloques de tiempo coherentes (mañana a noche), con horas HH:MM (24h).
+- "tipo" de cada bloque: uno de trabajo, estudio, descanso, fitness.
+- Si su energía es baja, incluye más descanso; si es alta, prioriza deep work y ejercicio.
+- Integra sus tareas críticas y, si hay, un bloque para sus intereses/proyectos.
+- "recomendaciones": 3-5 consejos concretos (ejercicio sugerido, comidas, hidratación, foco).
+- "saludo": 1 frase cálida según la hora. "resumen": 2-3 frases con el plan del día en prosa.
+
+Devuelve EXCLUSIVAMENTE JSON:
+{"saludo":"","resumen":"","bloques":[{"inicio":"07:00","fin":"08:00","titulo":"","tipo":"fitness"}],"recomendaciones":[""]}
+Responde en español.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: { systemInstruction: SYSTEM_INSTRUCTION, responseMimeType: 'application/json', temperature: 0.7, thinkingConfig: { thinkingBudget: 0 }, maxOutputTokens: 2000 }
+    });
+    const parsed = JSON.parse(response.text || '{}');
+    const bloques = Array.isArray(parsed.bloques)
+      ? parsed.bloques.filter((b) => b && b.titulo && b.inicio).map((b) => ({
+          inicio: String(b.inicio).slice(0, 5),
+          fin: String(b.fin || '').slice(0, 5),
+          titulo: String(b.titulo).slice(0, 120),
+          tipo: ['trabajo', 'estudio', 'descanso', 'fitness'].includes(b.tipo) ? b.tipo : 'trabajo'
+        }))
+      : [];
+    return {
+      ok: bloques.length > 0,
+      configured: true,
+      plan: {
+        saludo: String(parsed.saludo || '').slice(0, 200),
+        resumen: String(parsed.resumen || '').slice(0, 600),
+        bloques,
+        recomendaciones: Array.isArray(parsed.recomendaciones) ? parsed.recomendaciones.map((r) => String(r).slice(0, 200)).slice(0, 6) : []
+      }
+    };
+  } catch (error) {
+    console.error('[gemini] Error armando el día:', error.message);
+    return { ok: false, configured: true, plan: null };
+  }
+};
+
 module.exports = {
   MODEL,
   SYSTEM_INSTRUCTION,
@@ -307,5 +369,6 @@ module.exports = {
   generateAssistantReply,
   generateSkillTree,
   runAssistantAgent,
-  generateRetos
+  generateRetos,
+  generateDayPlan
 };
