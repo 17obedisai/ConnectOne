@@ -26,6 +26,8 @@ import LevelsPage from '@/pages/LevelsPage';
 import SkillTreePage from '@/pages/SkillTreePage';
 import FinanzasPage from '@/pages/FinanzasPage';
 import NotasPage from '@/pages/NotasPage';
+import AcademiaPage from '@/pages/AcademiaPage';
+import CursoPage from '@/pages/CursoPage';
 
 // ✅ Componente PrivateRoute
 const PrivateRoute = ({ children }) => {
@@ -62,6 +64,8 @@ const AppRoutes = () => {
         <Route path="/skilltree" element={<SkillTreePage />} />
         <Route path="/finanzas" element={<FinanzasPage />} />
         <Route path="/notas" element={<NotasPage />} />
+        <Route path="/academia" element={<AcademiaPage />} />
+        <Route path="/academia/:id" element={<CursoPage />} />
         <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />

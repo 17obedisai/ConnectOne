@@ -362,6 +362,111 @@ Responde en español.`;
   }
 };
 
+// ─────────────────────────────────────────────────────────────
+// ACADEMIA: cursos profundos (idiomas, instrumentos, software...).
+// Dos pasos: (1) esquema del curso (módulos + lecciones), (2) contenido de cada lección.
+// ─────────────────────────────────────────────────────────────
+
+// (1) Esquema del curso: módulos con títulos de lecciones (sin contenido aún).
+const generateCursoOutline = async ({ tema, nivel = 'principiante', intereses = [] }) => {
+  const ai = getClient();
+  if (!ai) return { ok: false, configured: false, curso: null };
+
+  const prompt = `Diseña el ESQUEMA de un curso profundo y completo para aprender: "${tema}".
+Nivel del estudiante: ${nivel}. ${intereses.length ? `Intereses del estudiante: ${intereses.join(', ')}.` : ''}
+
+Reglas:
+- Entre 4 y 6 módulos ordenados de lo más básico a lo más avanzado (progresión real).
+- Cada módulo con 3 a 5 lecciones concretas y accionables (solo títulos aquí).
+- "categoria": una de [idioma, instrumento, software, arte, fitness, conocimiento, otro].
+- "duracionMin" estimada por lección (10-45).
+- Títulos específicos y prácticos (no genéricos).
+
+Devuelve EXCLUSIVAMENTE JSON:
+{"titulo":"","categoria":"","nivel":"${nivel}","descripcion":"1-2 frases","modulos":[{"titulo":"","descripcion":"","lecciones":[{"titulo":"","duracionMin":20}]}]}
+Responde en español.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: { systemInstruction: SYSTEM_INSTRUCTION, responseMimeType: 'application/json', temperature: 0.8, thinkingConfig: { thinkingBudget: 0 }, maxOutputTokens: 3000 }
+    });
+    const p = JSON.parse(response.text || '{}');
+    const modulos = Array.isArray(p.modulos) ? p.modulos.filter((m) => m && m.titulo).map((m) => ({
+      titulo: String(m.titulo).slice(0, 140),
+      descripcion: String(m.descripcion || '').slice(0, 300),
+      lecciones: Array.isArray(m.lecciones) ? m.lecciones.filter((l) => l && l.titulo).map((l) => ({
+        titulo: String(l.titulo).slice(0, 160),
+        duracionMin: Number.isFinite(l.duracionMin) ? Math.min(Math.max(Math.round(l.duracionMin), 5), 90) : 20
+      })) : []
+    })).filter((m) => m.lecciones.length) : [];
+
+    if (!modulos.length) return { ok: false, configured: true, curso: null };
+    return {
+      ok: true,
+      configured: true,
+      curso: {
+        titulo: String(p.titulo || tema).slice(0, 140),
+        categoria: ['idioma', 'instrumento', 'software', 'arte', 'fitness', 'conocimiento', 'otro'].includes(p.categoria) ? p.categoria : 'conocimiento',
+        nivel,
+        descripcion: String(p.descripcion || '').slice(0, 400),
+        modulos
+      }
+    };
+  } catch (error) {
+    console.error('[gemini] Error generando curso:', error.message);
+    return { ok: false, configured: true, curso: null };
+  }
+};
+
+// (2) Contenido profundo de UNA lección, estructurado (sin necesidad de markdown).
+const generateLeccionContenido = async ({ cursoTitulo, moduloTitulo, leccionTitulo, nivel = 'principiante' }) => {
+  const ai = getClient();
+  if (!ai) return { ok: false, configured: false, contenido: null };
+
+  const prompt = `Crea el contenido PROFUNDO y práctico de una lección.
+Curso: "${cursoTitulo}". Módulo: "${moduloTitulo}". Lección: "${leccionTitulo}". Nivel: ${nivel}.
+
+Debe enseñar de verdad, paso a paso, como un buen tutor. Concreto, con ejemplos reales.
+
+Devuelve EXCLUSIVAMENTE JSON:
+{"introduccion":"2-3 frases que explican qué se aprende y por qué importa",
+"pasos":[{"titulo":"Paso 1: ...","detalle":"explicación clara y accionable (2-4 frases)"}],
+"tips":["consejo práctico","error común a evitar"],
+"ejemplo":"un ejemplo concreto y aplicado",
+"practica":"un mini-ejercicio para practicar ahora"}
+Incluye entre 3 y 6 pasos. Responde en español.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: { systemInstruction: SYSTEM_INSTRUCTION, responseMimeType: 'application/json', temperature: 0.75, thinkingConfig: { thinkingBudget: 0 }, maxOutputTokens: 2500 }
+    });
+    const p = JSON.parse(response.text || '{}');
+    const pasos = Array.isArray(p.pasos) ? p.pasos.filter((s) => s && (s.titulo || s.detalle)).map((s) => ({
+      titulo: String(s.titulo || '').slice(0, 160),
+      detalle: String(s.detalle || '').slice(0, 800)
+    })) : [];
+    if (!pasos.length) return { ok: false, configured: true, contenido: null };
+    return {
+      ok: true,
+      configured: true,
+      contenido: {
+        introduccion: String(p.introduccion || '').slice(0, 800),
+        pasos,
+        tips: Array.isArray(p.tips) ? p.tips.map((t) => String(t).slice(0, 300)).slice(0, 6) : [],
+        ejemplo: String(p.ejemplo || '').slice(0, 800),
+        practica: String(p.practica || '').slice(0, 600)
+      }
+    };
+  } catch (error) {
+    console.error('[gemini] Error generando lección:', error.message);
+    return { ok: false, configured: true, contenido: null };
+  }
+};
+
 module.exports = {
   MODEL,
   SYSTEM_INSTRUCTION,
@@ -370,5 +475,7 @@ module.exports = {
   generateSkillTree,
   runAssistantAgent,
   generateRetos,
-  generateDayPlan
+  generateDayPlan,
+  generateCursoOutline,
+  generateLeccionContenido
 };

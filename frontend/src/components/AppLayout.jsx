@@ -6,7 +6,7 @@ import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
   LayoutDashboard, User, Settings,
-  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, Wallet, StickyNote
+  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, Wallet, StickyNote, GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -106,6 +106,13 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       text: 'Árbol de Habilidades',
       color: 'from-fuchsia-500 to-purple-600',
       emoji: '🌳'
+    },
+    {
+      to: '/academia',
+      icon: <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />,
+      text: 'Academia',
+      color: 'from-cyan-500 to-blue-600',
+      emoji: '🎓'
     },
     {
       to: '/finanzas',

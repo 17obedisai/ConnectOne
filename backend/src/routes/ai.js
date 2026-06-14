@@ -10,6 +10,8 @@ const Transaction = require('../models/Transaction');
 const JournalEntry = require('../models/JournalEntry');
 const Note = require('../models/Note');
 const Reto = require('../models/Reto');
+const Curso = require('../models/Curso');
+const { generateCursoOutline } = require('../services/gemini');
 const { isConfigured, generateAssistantReply, runAssistantAgent, generateDayPlan } = require('../services/gemini');
 
 // Reúne el contexto de HOY del usuario (plan, hábitos, retos) para la IA.
@@ -122,6 +124,18 @@ const toolDeclarations = [
       },
       required: ['titulo']
     }
+  },
+  {
+    name: 'crear_curso',
+    description: 'Crea un curso de aprendizaje en la Academia sobre un tema (ej. "aprender guitarra", "inglés desde cero", "producción en Logic Pro").',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        tema: { type: Type.STRING },
+        nivel: { type: Type.STRING, enum: ['principiante', 'intermedio', 'avanzado'] }
+      },
+      required: ['tema']
+    }
   }
 ];
 
@@ -210,6 +224,13 @@ const makeExecuteTool = (userId) => async (name, args) => {
         personalizado: true
       });
       return { ok: true, tipo: 'reto', id: r._id, titulo: r.titulo };
+    }
+    case 'crear_curso': {
+      if (!args.tema || !args.tema.trim()) return { ok: false, motivo: 'Tema vacío' };
+      const out = await generateCursoOutline({ tema: args.tema.trim(), nivel: args.nivel || 'principiante' });
+      if (!out.ok || !out.curso) return { ok: false, motivo: 'No pude crear el curso' };
+      const c = await Curso.create({ userId, ...out.curso });
+      return { ok: true, tipo: 'curso', id: c._id, titulo: c.titulo, modulos: c.modulos.length };
     }
     default:
       return { ok: false, motivo: `Herramienta desconocida: ${name}` };

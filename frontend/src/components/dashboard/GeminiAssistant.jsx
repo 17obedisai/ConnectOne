@@ -22,7 +22,8 @@ const ACTION_META = {
   registrar_movimiento: { emoji: '💰', label: 'Movimiento' },
   anotar_aprendizaje: { emoji: '📓', label: 'Bitácora' },
   crear_nota: { emoji: '📝', label: 'Nota' },
-  crear_reto: { emoji: '🎯', label: 'Reto' }
+  crear_reto: { emoji: '🎯', label: 'Reto' },
+  crear_curso: { emoji: '🎓', label: 'Curso' }
 };
 const accionDetalle = (a) =>
   a.args?.titulo || a.args?.texto || a.args?.descripcion ||
