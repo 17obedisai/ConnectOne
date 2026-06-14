@@ -263,11 +263,49 @@ const runAssistantAgent = async ({ message, history = [], context = {}, tools = 
   }
 };
 
+// Genera retos secundarios (para días libres) según lugar e intereses.
+const generateRetos = async ({ lugar = '', intereses = [], cantidad = 5 }) => {
+  const ai = getClient();
+  if (!ai) return { ok: false, configured: false, retos: [] };
+
+  const n = Math.min(Math.max(parseInt(cantidad, 10) || 5, 1), 8);
+  const ctx = [];
+  if (lugar) ctx.push(`Lugar/contexto del usuario: ${lugar}`);
+  if (intereses.length) ctx.push(`Intereses: ${intereses.join(', ')}`);
+
+  const prompt = `Genera ${n} "retos" secundarios para días libres o festivos (cosas opcionales,
+sin fecha fija, que la persona hace cuando tiene tiempo). Variados y concretos.
+${ctx.join('\n')}
+
+Cada reto: titulo corto, descripcion (1 frase motivadora), categoria (una de: aventura, naturaleza,
+fitness, social, creatividad, aprendizaje, hogar, mente, otro), contexto (uno de: aire_libre, casa,
+ciudad, cualquiera), dificultad (facil, media, dificil), duracion (ej "30 min", "2 h"), xp (100-350 según dificultad).
+
+Devuelve EXCLUSIVAMENTE JSON:
+{"retos":[{"titulo":"","descripcion":"","categoria":"","contexto":"","dificultad":"","duracion":"","xp":150}]}
+Responde en español.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt,
+      config: { systemInstruction: SYSTEM_INSTRUCTION, responseMimeType: 'application/json', temperature: 0.95, thinkingConfig: { thinkingBudget: 0 }, maxOutputTokens: 2000 }
+    });
+    const parsed = JSON.parse(response.text || '{}');
+    const retos = Array.isArray(parsed.retos) ? parsed.retos.filter((r) => r && r.titulo) : [];
+    return { ok: retos.length > 0, configured: true, retos };
+  } catch (error) {
+    console.error('[gemini] Error generando retos:', error.message);
+    return { ok: false, configured: true, retos: [] };
+  }
+};
+
 module.exports = {
   MODEL,
   SYSTEM_INSTRUCTION,
   isConfigured,
   generateAssistantReply,
   generateSkillTree,
-  runAssistantAgent
+  runAssistantAgent,
+  generateRetos
 };

@@ -9,6 +9,7 @@ const Reminder = require('../models/Reminder');
 const Transaction = require('../models/Transaction');
 const JournalEntry = require('../models/JournalEntry');
 const Note = require('../models/Note');
+const Reto = require('../models/Reto');
 const { isConfigured, generateAssistantReply, runAssistantAgent } = require('../services/gemini');
 
 const hoy = () => new Date().toISOString().slice(0, 10);
@@ -89,6 +90,20 @@ const toolDeclarations = [
       },
       required: ['contenido']
     }
+  },
+  {
+    name: 'crear_reto',
+    description: 'Crea un reto secundario para días libres (ej. "subir a un mirador", "correr 5 km", "visitar un lugar nuevo").',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        titulo: { type: Type.STRING },
+        descripcion: { type: Type.STRING },
+        categoria: { type: Type.STRING, enum: ['aventura', 'naturaleza', 'fitness', 'social', 'creatividad', 'aprendizaje', 'hogar', 'mente', 'otro'] },
+        contexto: { type: Type.STRING, enum: ['aire_libre', 'casa', 'ciudad', 'cualquiera'] }
+      },
+      required: ['titulo']
+    }
   }
 ];
 
@@ -165,6 +180,18 @@ const makeExecuteTool = (userId) => async (name, args) => {
         categoria: ['idea', 'proyecto', 'lectura', 'personal', 'tarea', 'otro'].includes(args.categoria) ? args.categoria : 'otro'
       });
       return { ok: true, tipo: 'nota', id: n._id, contenido: n.contenido };
+    }
+    case 'crear_reto': {
+      if (!args.titulo || !args.titulo.trim()) return { ok: false, motivo: 'Reto sin título' };
+      const r = await Reto.create({
+        userId,
+        titulo: args.titulo.trim(),
+        descripcion: args.descripcion || '',
+        categoria: ['aventura', 'naturaleza', 'fitness', 'social', 'creatividad', 'aprendizaje', 'hogar', 'mente', 'otro'].includes(args.categoria) ? args.categoria : 'otro',
+        contexto: ['aire_libre', 'casa', 'ciudad', 'cualquiera'].includes(args.contexto) ? args.contexto : 'cualquiera',
+        personalizado: true
+      });
+      return { ok: true, tipo: 'reto', id: r._id, titulo: r.titulo };
     }
     default:
       return { ok: false, motivo: `Herramienta desconocida: ${name}` };

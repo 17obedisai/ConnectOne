@@ -96,7 +96,7 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
     {
       to: '/missions',
       icon: <Target className="w-4 h-4 sm:w-5 sm:h-5" />,
-      text: 'Misiones',
+      text: 'Retos',
       color: 'from-blue-500 to-cyan-600',
       emoji: '🎯'
     },

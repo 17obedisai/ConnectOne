@@ -120,6 +120,7 @@ app.use('/api/skilltree', require('./src/routes/skillTree'));
 app.use('/api/journal', require('./src/routes/journal'));
 app.use('/api/reminders', require('./src/routes/reminders'));
 app.use('/api/notes', require('./src/routes/notes'));
+app.use('/api/retos', require('./src/routes/retos'));
 app.use('/api/finance', require('./src/routes/finance'));
 app.use('/api/overview', require('./src/routes/overview'));
 app.use('/api/ai', aiLimiter, require('./src/routes/ai'));
