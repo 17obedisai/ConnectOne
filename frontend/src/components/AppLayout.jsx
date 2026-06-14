@@ -6,7 +6,7 @@ import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
   LayoutDashboard, User, Settings,
-  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, Wallet, StickyNote, GraduationCap
+  LogOut, Menu, Target, Sparkles, Zap, Activity, ChevronRight, X, Wallet, StickyNote, GraduationCap, LineChart
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -113,6 +113,13 @@ const SidebarContent = ({ onLinkClick, isMobile = false }) => {
       text: 'Academia',
       color: 'from-cyan-500 to-blue-600',
       emoji: '🎓'
+    },
+    {
+      to: '/seguimiento',
+      icon: <LineChart className="w-4 h-4 sm:w-5 sm:h-5" />,
+      text: 'Seguimiento',
+      color: 'from-green-500 to-emerald-600',
+      emoji: '📈'
     },
     {
       to: '/finanzas',

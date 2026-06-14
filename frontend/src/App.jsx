@@ -28,6 +28,7 @@ import FinanzasPage from '@/pages/FinanzasPage';
 import NotasPage from '@/pages/NotasPage';
 import AcademiaPage from '@/pages/AcademiaPage';
 import CursoPage from '@/pages/CursoPage';
+import SeguimientoPage from '@/pages/SeguimientoPage';
 
 // ✅ Componente PrivateRoute
 const PrivateRoute = ({ children }) => {
@@ -66,6 +67,7 @@ const AppRoutes = () => {
         <Route path="/notas" element={<NotasPage />} />
         <Route path="/academia" element={<AcademiaPage />} />
         <Route path="/academia/:id" element={<CursoPage />} />
+        <Route path="/seguimiento" element={<SeguimientoPage />} />
         <Route path="/mission/:id" element={<MissionPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />

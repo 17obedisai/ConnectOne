@@ -11,15 +11,20 @@ const JournalEntry = require('../models/JournalEntry');
 const Note = require('../models/Note');
 const Reto = require('../models/Reto');
 const Curso = require('../models/Curso');
+const Proyecto = require('../models/Proyecto');
+const Libro = require('../models/Libro');
+const Fitness = require('../models/Fitness');
 const { generateCursoOutline } = require('../services/gemini');
 const { isConfigured, generateAssistantReply, runAssistantAgent, generateDayPlan } = require('../services/gemini');
 
 // Reúne el contexto de HOY del usuario (plan, hábitos, retos) para la IA.
 const contextoDeHoy = async (userId) => {
   const fecha = hoy();
-  const [plan, retos] = await Promise.all([
+  const [plan, retos, libros, proyectos] = await Promise.all([
     DailyFocus.findOne({ userId, fecha }),
-    Reto.find({ userId, completado: false }).limit(5).select('titulo')
+    Reto.find({ userId, completado: false }).limit(5).select('titulo'),
+    Libro.find({ userId, estado: 'leyendo' }).limit(4).select('titulo paginaActual paginasTotal'),
+    Proyecto.find({ userId, estado: 'activo' }).limit(4).select('nombre progreso')
   ]);
   return {
     energia: plan?.energia,
@@ -28,6 +33,8 @@ const contextoDeHoy = async (userId) => {
     agendaHoy: (plan?.agenda || []).map((b) => `${b.inicio}${b.fin ? '-' + b.fin : ''} ${b.titulo}`),
     habitosHoy: (plan?.habitos || []).map((h) => h.nombre),
     retosPendientes: retos.map((r) => r.titulo),
+    librosLeyendo: libros.map((l) => `${l.titulo}${l.paginasTotal ? ` (pág ${l.paginaActual}/${l.paginasTotal})` : ''}`),
+    proyectosActivos: proyectos.map((p) => `${p.nombre} (${p.progreso}%)`),
     plan
   };
 };
@@ -136,6 +143,21 @@ const toolDeclarations = [
       },
       required: ['tema']
     }
+  },
+  {
+    name: 'registrar_peso',
+    description: 'Registra tu peso corporal de hoy (en kg) para el seguimiento de fitness.',
+    parameters: { type: Type.OBJECT, properties: { peso: { type: Type.NUMBER } }, required: ['peso'] }
+  },
+  {
+    name: 'avance_proyecto',
+    description: 'Registra un avance en un proyecto personal (ej. "avancé el login"). Si el proyecto no existe, lo crea.',
+    parameters: { type: Type.OBJECT, properties: { nombre: { type: Type.STRING }, texto: { type: Type.STRING } }, required: ['nombre', 'texto'] }
+  },
+  {
+    name: 'registrar_lectura',
+    description: 'Actualiza tu progreso de lectura de un libro (página actual). Si no existe, lo crea.',
+    parameters: { type: Type.OBJECT, properties: { titulo: { type: Type.STRING }, paginaActual: { type: Type.NUMBER } }, required: ['titulo'] }
   }
 ];
 
@@ -232,6 +254,37 @@ const makeExecuteTool = (userId) => async (name, args) => {
       const c = await Curso.create({ userId, ...out.curso });
       return { ok: true, tipo: 'curso', id: c._id, titulo: c.titulo, modulos: c.modulos.length };
     }
+    case 'registrar_peso': {
+      const peso = Number(args.peso);
+      if (!Number.isFinite(peso) || peso <= 0) return { ok: false, motivo: 'Peso inválido' };
+      let f = await Fitness.findOne({ userId });
+      if (!f) f = await Fitness.create({ userId });
+      f.registros.push({ peso, fecha: new Date() });
+      f.registros.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      await f.save();
+      return { ok: true, tipo: 'peso', peso };
+    }
+    case 'avance_proyecto': {
+      if (!args.nombre || !args.texto) return { ok: false, motivo: 'Faltan datos' };
+      const lista = await Proyecto.find({ userId });
+      let p = lista.find((x) => x.nombre.toLowerCase() === args.nombre.trim().toLowerCase());
+      if (!p) p = await Proyecto.create({ userId, nombre: args.nombre.trim() });
+      p.avances.unshift({ texto: args.texto.trim(), fecha: new Date() });
+      await p.save();
+      return { ok: true, tipo: 'avance', proyecto: p.nombre };
+    }
+    case 'registrar_lectura': {
+      if (!args.titulo) return { ok: false, motivo: 'Falta el título' };
+      const libros = await Libro.find({ userId });
+      let l = libros.find((x) => x.titulo.toLowerCase() === args.titulo.trim().toLowerCase());
+      if (!l) l = await Libro.create({ userId, titulo: args.titulo.trim() });
+      if (args.paginaActual != null) {
+        l.paginaActual = Number(args.paginaActual) || l.paginaActual;
+        if (l.paginasTotal && l.paginaActual >= l.paginasTotal) l.estado = 'terminado';
+      }
+      await l.save();
+      return { ok: true, tipo: 'lectura', titulo: l.titulo, pagina: l.paginaActual };
+    }
     default:
       return { ok: false, motivo: `Herramienta desconocida: ${name}` };
   }
@@ -269,7 +322,9 @@ router.post('/assistant', auth, async (req, res) => {
       tareasFoco: hoyCtx.tareasFoco?.length ? hoyCtx.tareasFoco.slice(0, 5) : (Array.isArray(context.tareasFoco) ? context.tareasFoco.slice(0, 5) : undefined),
       agendaHoy: hoyCtx.agendaHoy,
       habitosHoy: hoyCtx.habitosHoy,
-      retosPendientes: hoyCtx.retosPendientes
+      retosPendientes: hoyCtx.retosPendientes,
+      librosLeyendo: hoyCtx.librosLeyendo,
+      proyectosActivos: hoyCtx.proyectosActivos
     };
 
     const result = await runAssistantAgent({

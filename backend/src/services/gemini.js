@@ -71,6 +71,12 @@ const buildContextBlock = (context = {}) => {
   if (Array.isArray(context.retosPendientes) && context.retosPendientes.length) {
     lines.push(`Retos pendientes: ${context.retosPendientes.slice(0, 5).join(' | ')}`);
   }
+  if (Array.isArray(context.librosLeyendo) && context.librosLeyendo.length) {
+    lines.push(`Leyendo: ${context.librosLeyendo.join(' | ')}`);
+  }
+  if (Array.isArray(context.proyectosActivos) && context.proyectosActivos.length) {
+    lines.push(`Proyectos activos: ${context.proyectosActivos.join(' | ')}`);
+  }
   if (!lines.length) return '';
   return `\n\n[CONTEXTO DEL USUARIO]\n${lines.join('\n')}`;
 };

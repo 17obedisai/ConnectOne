@@ -23,7 +23,10 @@ const ACTION_META = {
   anotar_aprendizaje: { emoji: '📓', label: 'Bitácora' },
   crear_nota: { emoji: '📝', label: 'Nota' },
   crear_reto: { emoji: '🎯', label: 'Reto' },
-  crear_curso: { emoji: '🎓', label: 'Curso' }
+  crear_curso: { emoji: '🎓', label: 'Curso' },
+  registrar_peso: { emoji: '⚖️', label: 'Peso' },
+  avance_proyecto: { emoji: '🚀', label: 'Avance' },
+  registrar_lectura: { emoji: '📖', label: 'Lectura' }
 };
 const accionDetalle = (a) =>
   a.args?.titulo || a.args?.texto || a.args?.descripcion ||
